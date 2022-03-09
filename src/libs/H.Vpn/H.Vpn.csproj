@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net4.6.1</TargetFrameworks>
+    <NoWarn>$(NoWarn)</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Label="NuGet">
+    <Description>C# high-level VPN library</Description>
+    <PackageTags>vpn, openvpn, wfp, windows-filtering-platform, net-standard</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\H.Firewall\H.Firewall.csproj" />
+    <ProjectReference Include="..\H.OpenVpn\H.OpenVpn.csproj" />
+  </ItemGroup>
+
+</Project>

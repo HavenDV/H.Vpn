@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net4.5.1</TargetFrameworks>
+    <NoWarn>$(NoWarn)</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Label="NuGet">
+    <Description>C# wrapper library for Windows Filtering Platform</Description>
+    <PackageTags>wfp, windows-filtering-platform, net-standard</PackageTags>
+  </PropertyGroup>
+
+</Project>

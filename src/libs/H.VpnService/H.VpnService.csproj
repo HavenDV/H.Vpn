@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net4.6.1</TargetFrameworks>
+    <NoWarn>$(NoWarn)</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Label="NuGet">
+    <Description>C# high-level VPN library with implemented IPC</Description>
+    <PackageTags>vpn, openvpn, wfp, windows-filtering-platform, net-standard</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="H.Pipes.AccessControl" Version="1.14.1.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\H.Vpn\H.Vpn.csproj" />
+  </ItemGroup>
+
+</Project>

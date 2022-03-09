@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net4.5.1</TargetFrameworks>
+    <NoWarn>$(NoWarn)</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Label="NuGet">
+    <Description>C# wrapper library for IpHlpApi</Description>
+    <PackageTags>IpHlpApi, net-standard</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="IPNetwork2" Version="2.5.402" />
+  </ItemGroup>
+
+</Project>
