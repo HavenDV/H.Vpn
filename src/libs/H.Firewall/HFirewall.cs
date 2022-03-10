@@ -152,36 +152,43 @@ public class HFirewall : IDisposable
         }
     }
 
+    public void AllowLan(
+        Guid providerKey,
+        Guid subLayerKey)
+    {
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("192.168.0.0/16"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("172.16.0.0/12"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("10.0.0.0/8"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("224.0.0.0/4"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("169.254.0.0/16"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("255.255.255.255/32"));
+    }
+
     public void StartSession(Settings settings, string vpnIp)
     {
         Start();
 
         RunTransaction(ptr =>
         {
-            var keys = RegisterKeys();
+            var (providerKey, subLayerKey) = RegisterKeys();
             if (settings.EnableKillSwitch)
             {
                 // H.Wfp-Service.exe
-                PermitAppId(keys, GetServiceProcessPath(), 15);
+                PermitAppId(providerKey, subLayerKey, GetServiceProcessPath(), 15);
                 // OpenVPN.exe
-                PermitAppId(keys, GetOpenVpnPath(), 14);
+                PermitAppId(providerKey, subLayerKey, GetOpenVpnPath(), 14);
 
                 // H.Wfp.exe
 #if DEBUG
-                PermitAppId(keys, @"C:\Program Files\H.Wfp\H.Wfp.exe", 13);
+                PermitAppId(providerKey, subLayerKey, @"C:\Program Files\H.Wfp\H.Wfp.exe", 13);
 #else
-                PermitAppId(keys, GetGuiProcessPath(), 13);
+                PermitAppId(providerKey, subLayerKey, GetGuiProcessPath(), 13);
 #endif
 
                 // LAN
                 if (settings.AllowLan)
                 {
-                    PermitRemoteSubNetworkV4(keys, 12, IPNetwork.Parse("192.168.0.0/16"));
-                    PermitRemoteSubNetworkV4(keys, 12, IPNetwork.Parse("172.16.0.0/12"));
-                    PermitRemoteSubNetworkV4(keys, 12, IPNetwork.Parse("10.0.0.0/8"));
-                    PermitRemoteSubNetworkV4(keys, 12, IPNetwork.Parse("224.0.0.0/4"));
-                    PermitRemoteSubNetworkV4(keys, 12, IPNetwork.Parse("169.254.0.0/16"));
-                    PermitRemoteSubNetworkV4(keys, 12, IPNetwork.Parse("255.255.255.255/32"));
+                    AllowLan(providerKey, subLayerKey);
                 }
 
                 // DNS
@@ -198,39 +205,45 @@ public class HFirewall : IDisposable
                 {
                     dnsServers.Add(IPAddress.Parse("10.255.0.1"));
                 }
-                PermitDns(keys, 11, 10, dnsServers);
+                PermitDns(providerKey, subLayerKey, 11, 10, dnsServers);
 
                 // IKEv2
-                PermitLocalSubNetworkV4(keys, 9, IPNetwork.Parse("10.0.0.0/8"));
-                PermitProtocolV4(keys, 9, WtIPProto.cIPPROTO_IPinIP);
+                PermitLocalSubNetworkV4(providerKey, subLayerKey, 9, IPNetwork.Parse("10.0.0.0/8"));
+                PermitProtocolV4(providerKey, subLayerKey, 9, WtIPProto.cIPPROTO_IPinIP);
 
                 // TAP adapter
-                PermitNetworkInterface(keys, 2, NetworkMethods.FindTapAdapterLuid());
+                PermitNetworkInterface(providerKey, subLayerKey, 2, NetworkMethods.FindTapAdapterLuid());
 
                 // Localhost
-                PermitLoopback(keys, 1);
+                PermitLoopback(providerKey, subLayerKey, 1);
 
                 // Block everything not allowed explicitly
-                BlockAll(keys, 0);
+                BlockAll(providerKey, subLayerKey, 0);
             }
 
             switch (settings.SplitTunnelingMode)
             {
                 case SplitTunnelingMode.AllowSelectedApps:
                     {
-                        RegisterCallout(keys);
+                        RegisterCallout(providerKey);
 
-                        var localProviderContextKey = RegisterProviderContext(keys, IPAddress.Parse(settings.LocalIp));
+                        var localProviderContextKey = RegisterProviderContext(
+                            providerKey,
+                            IPAddress.Parse(settings.LocalIp));
                         AllowSplitApps(
-                            keys,
+                            providerKey,
+                            subLayerKey,
                             settings.SplitTunnelingApps,
                             8,
                             localProviderContextKey,
                             true);
 
-                        var vpnProviderContextKey = RegisterProviderContext(keys, IPAddress.Parse(vpnIp));
+                        var vpnProviderContextKey = RegisterProviderContext(
+                            providerKey,
+                            IPAddress.Parse(vpnIp));
                         AllowSplitApps(
-                            keys,
+                            providerKey,
+                            subLayerKey,
                             settings.SplitTunnelingApps,
                             8,
                             vpnProviderContextKey,
@@ -240,19 +253,25 @@ public class HFirewall : IDisposable
 
                 case SplitTunnelingMode.DisallowSelectedApps:
                     {
-                        RegisterCallout(keys);
+                        RegisterCallout(providerKey);
 
-                        var localProviderContextKey = RegisterProviderContext(keys, IPAddress.Parse(settings.LocalIp));
+                        var localProviderContextKey = RegisterProviderContext(
+                            providerKey,
+                            IPAddress.Parse(settings.LocalIp));
                         AllowSplitApps(
-                            keys,
+                            providerKey,
+                            subLayerKey,
                             settings.SplitTunnelingApps,
                             8,
                             localProviderContextKey,
                             false);
 
-                        var vpnProviderContextKey = RegisterProviderContext(keys, IPAddress.Parse(vpnIp));
+                        var vpnProviderContextKey = RegisterProviderContext(
+                            providerKey,
+                            IPAddress.Parse(vpnIp));
                         AllowSplitApps(
-                            keys,
+                            providerKey,
+                            subLayerKey,
                             settings.SplitTunnelingApps,
                             8,
                             vpnProviderContextKey,
@@ -296,7 +315,7 @@ public class HFirewall : IDisposable
             WfpMethods.CloseWfpSession);
     }
 
-    public Tuple<Guid, Guid> RegisterKeys()
+    public (Guid providerGuid, Guid subLayerGuid) RegisterKeys()
     {
         var providerGuid = WfpMethods.AddProvider(
             WfpSession,
@@ -308,7 +327,7 @@ public class HFirewall : IDisposable
             "H.Wfp filters",
             "Permissive and blocking filters");
 
-        return new Tuple<Guid, Guid>(providerGuid, subLayerGuid);
+        return (providerGuid, subLayerGuid);
     }
 
     private static IReadOnlyDictionary<string, Guid> V4Layers { get; } = new Dictionary<string, Guid>
@@ -333,38 +352,43 @@ public class HFirewall : IDisposable
         0x2da40468, 0xb926, 0x4402,
         0xb3, 0xf8, 0xcb, 0x4e, 0x91, 0x27, 0x01, 0x59);
 
-    public void RegisterCallout(Tuple<Guid, Guid> wfpKeys)
+    public void RegisterCallout(
+        Guid providerKey)
     {
         WfpMethods.AddCallout(
             WfpSession,
             cHVPN_WFP_CALLOUT_V4,
-            wfpKeys.Item1,
+            providerKey,
             NativeConstants.cFWPM_LAYER_ALE_BIND_REDIRECT_V4,
             "H.Wfp",
             "Split tunneling callout (IPv4)");
     }
 
-    public Guid RegisterProviderContext(Tuple<Guid, Guid> wfpKeys, IPAddress ipAddress)
+    public Guid RegisterProviderContext(
+        Guid providerKey,
+        IPAddress ipAddress)
     {
         return WfpMethods.AddProviderContext(
             WfpSession,
-            wfpKeys.Item1,
+            providerKey,
             "H.Wfp",
             "Register provider context for split tunneling callout driver",
             ipAddress);
     }
 
     public void EnableSplitApp(
-        Tuple<Guid, Guid> wfpKeys,
+        Guid providerKey,
+        Guid subLayerKey,
         string appPath,
         byte weight,
         Guid providerContextKey)
     {
-        AllowSplitApps(wfpKeys, new[] { appPath }, weight, providerContextKey, false);
+        AllowSplitApps(providerKey, subLayerKey, new[] { appPath }, weight, providerContextKey, false);
     }
 
     public void AllowSplitApps(
-        Tuple<Guid, Guid> wfpKeys,
+        Guid providerKey,
+        Guid subLayerKey,
         ICollection<string> paths,
         byte weight,
         Guid providerContextKey,
@@ -378,10 +402,10 @@ public class HFirewall : IDisposable
         {
             foreach (var appId in appIds)
             {
-                PermitAppId(wfpKeys, appId, weight);
+                PermitAppId(providerKey, subLayerKey, appId, weight);
             }
 
-            AllowSplitAppIds(wfpKeys, appIds, weight, providerContextKey, reversed);
+            AllowSplitAppIds(providerKey, appIds, weight, providerContextKey, reversed);
         }
         finally
         {
@@ -393,7 +417,7 @@ public class HFirewall : IDisposable
     }
 
     public void AllowSplitAppIds(
-        Tuple<Guid, Guid> wfpKeys,
+        Guid providerKey,
         IntPtrWrapper[] appIds,
         byte weight,
         Guid providerContextKey,
@@ -401,7 +425,7 @@ public class HFirewall : IDisposable
     {
         WfpMethods.AllowSplitAppIds(
             WfpSession,
-            wfpKeys.Item1,
+            providerKey,
             NativeConstants.cFWPM_SUBLAYER_UNIVERSAL,
             NativeConstants.cFWPM_LAYER_ALE_BIND_REDIRECT_V4,
             appIds,
@@ -414,22 +438,26 @@ public class HFirewall : IDisposable
     }
 
     public void EnableSplitAppId(
-        Tuple<Guid, Guid> wfpKeys,
+        Guid providerKey,
         IntPtrWrapper appId,
         byte weight,
         Guid providerContextKey)
     {
-        AllowSplitAppIds(wfpKeys, new[] { appId }, weight, providerContextKey, false);
+        AllowSplitAppIds(providerKey, new[] { appId }, weight, providerContextKey, false);
     }
 
-    public void PermitAppId(Tuple<Guid, Guid> wfpKeys, IntPtrWrapper appId, byte weight)
+    public void PermitAppId(
+        Guid providerKey,
+        Guid subLayerKey,
+        IntPtrWrapper appId,
+        byte weight)
     {
         foreach (var pair in Layers)
         {
             WfpMethods.PermitAppId(
                 WfpSession,
-                wfpKeys.Item1,
-                wfpKeys.Item2,
+                providerKey,
+                subLayerKey,
                 pair.Value,
                 appId,
                 weight,
@@ -438,14 +466,17 @@ public class HFirewall : IDisposable
         }
     }
 
-    public void PermitAppId(Tuple<Guid, Guid> wfpKeys, string path, byte weight)
+    public void PermitAppId(
+        Guid providerKey,
+        Guid subLayerKey,
+        string path,
+        byte weight)
     {
         try
         {
-            using (var id = GetAppId(path))
-            {
-                PermitAppId(wfpKeys, id, weight);
-            }
+            using var id = GetAppId(path);
+
+            PermitAppId(providerKey, subLayerKey, id, weight);
         }
         catch (Exception exception)
         {
@@ -453,14 +484,17 @@ public class HFirewall : IDisposable
         }
     }
 
-    public void PermitLoopback(Tuple<Guid, Guid> wfpKeys, byte weight)
+    public void PermitLoopback(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight)
     {
         foreach (var pair in Layers)
         {
             WfpMethods.PermitLoopback(
                 WfpSession,
-                wfpKeys.Item1,
-                wfpKeys.Item2,
+                providerKey,
+                subLayerKey,
                 pair.Value,
                 weight,
                 "H.Wfp",
@@ -468,14 +502,17 @@ public class HFirewall : IDisposable
         }
     }
 
-    public void BlockAll(Tuple<Guid, Guid> wfpKeys, byte weight)
+    public void BlockAll(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight)
     {
         foreach (var pair in Layers)
         {
             WfpMethods.BlockAll(
                 WfpSession,
-                wfpKeys.Item1,
-                wfpKeys.Item2,
+                providerKey,
+                subLayerKey,
                 pair.Value,
                 weight,
                 "H.Wfp",
@@ -483,7 +520,12 @@ public class HFirewall : IDisposable
         }
     }
 
-    public void PermitDns(Tuple<Guid, Guid> wfpKeys, byte weightAllow, byte weightDeny, ICollection<IPAddress> addresses)
+    public void PermitDns(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weightAllow,
+        byte weightDeny,
+        ICollection<IPAddress> addresses)
     {
         if (weightDeny >= weightAllow)
         {
@@ -494,8 +536,8 @@ public class HFirewall : IDisposable
         {
             WfpMethods.BlockDns(
                 WfpSession,
-                wfpKeys.Item1,
-                wfpKeys.Item2,
+                providerKey,
+                subLayerKey,
                 pair.Value,
                 weightDeny,
                 "H.Wfp",
@@ -506,8 +548,8 @@ public class HFirewall : IDisposable
         {
             WfpMethods.AllowDnsV4(
                 WfpSession,
-                wfpKeys.Item1,
-                wfpKeys.Item2,
+                providerKey,
+                subLayerKey,
                 pair.Value,
                 weightDeny,
                 addresses.Where(address => address.AddressFamily == AddressFamily.InterNetwork),
@@ -519,8 +561,8 @@ public class HFirewall : IDisposable
         {
             WfpMethods.AllowDnsV6(
                 WfpSession,
-                wfpKeys.Item1,
-                wfpKeys.Item2,
+                providerKey,
+                subLayerKey,
                 pair.Value,
                 weightDeny,
                 addresses.Where(address => address.AddressFamily == AddressFamily.InterNetworkV6),
@@ -529,14 +571,18 @@ public class HFirewall : IDisposable
         }
     }
 
-    public void PermitNetworkInterface(Tuple<Guid, Guid> wfpKeys, byte weight, ulong ifLuid)
+    public void PermitNetworkInterface(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        ulong ifLuid)
     {
         foreach (var pair in Layers)
         {
             WfpMethods.PermitNetworkInterface(
                 WfpSession,
-                wfpKeys.Item1,
-                wfpKeys.Item2,
+                providerKey,
+                subLayerKey,
                 pair.Value,
                 weight,
                 ifLuid,
@@ -546,7 +592,8 @@ public class HFirewall : IDisposable
     }
 
     public void PermitSubNetworkV4(
-        Tuple<Guid, Guid> wfpKeys,
+        Guid providerKey,
+        Guid subLayerKey,
         byte weight,
         IPAddress address,
         IPAddress mask,
@@ -556,8 +603,8 @@ public class HFirewall : IDisposable
         {
             WfpMethods.PermitSubNetworkV4(
                 WfpSession,
-                wfpKeys.Item1,
-                wfpKeys.Item2,
+                providerKey,
+                subLayerKey,
                 pair.Value,
                 weight,
                 address,
@@ -569,22 +616,28 @@ public class HFirewall : IDisposable
     }
 
     public void PermitLocalSubNetworkV4(
-        Tuple<Guid, Guid> wfpKeys,
+        Guid providerKey,
+        Guid subLayerKey,
         byte weight,
         IPNetwork network)
     {
-        PermitSubNetworkV4(wfpKeys, weight, network.Network, network.Netmask, true);
+        PermitSubNetworkV4(providerKey, subLayerKey, weight, network.Network, network.Netmask, true);
     }
 
     public void PermitRemoteSubNetworkV4(
-        Tuple<Guid, Guid> wfpKeys,
+        Guid providerKey,
+        Guid subLayerKey,
         byte weight,
         IPNetwork network)
     {
-        PermitSubNetworkV4(wfpKeys, weight, network.Network, network.Netmask, false);
+        PermitSubNetworkV4(providerKey, subLayerKey, weight, network.Network, network.Netmask, false);
     }
 
-    public void PermitUdpPortV4(Tuple<Guid, Guid> wfpKeys, byte weight, ushort port)
+    public void PermitUdpPortV4(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        ushort port)
     {
         foreach (var pair in new Dictionary<string, Guid>
         {
@@ -594,8 +647,8 @@ public class HFirewall : IDisposable
         {
             WfpMethods.PermitUdpPortV4(
                 WfpSession,
-                wfpKeys.Item1,
-                wfpKeys.Item2,
+                providerKey,
+                subLayerKey,
                 pair.Value,
                 weight,
                 port,
@@ -604,14 +657,18 @@ public class HFirewall : IDisposable
         }
     }
 
-    public void PermitProtocolV4(Tuple<Guid, Guid> wfpKeys, byte weight, WtIPProto proto)
+    public void PermitProtocolV4(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        WtIPProto proto)
     {
         foreach (var pair in V4Layers)
         {
             WfpMethods.PermitProtocolV4(
                 WfpSession,
-                wfpKeys.Item1,
-                wfpKeys.Item2,
+                providerKey,
+                subLayerKey,
                 pair.Value,
                 weight,
                 (byte)proto,
