@@ -139,6 +139,15 @@ c401cb08c3ed2901725b0601d2b5de89
     public void StartTest()
     {
         using var vpn = new HOpenVpn();
+        vpn.ConsoleLineReceived += (_, message) =>
+        {
+            Console.WriteLine(message);
+        };
+        vpn.ManagementLineReceived += (_, message) =>
+        {
+            Console.WriteLine(message);
+        };
+
         vpn.Start(Config, Username, Password);
     }
 
@@ -146,36 +155,38 @@ c401cb08c3ed2901725b0601d2b5de89
     public async Task SendSignalTest()
     {
         using var vpn = new HOpenVpn();
+        vpn.ConsoleLineReceived += (_, message) =>
+        {
+            Console.WriteLine(message);
+        };
+        vpn.ManagementLineReceived += (_, message) =>
+        {
+            Console.WriteLine(message);
+        };
+
         vpn.Start(Config, Username, Password);
 
         await vpn.WaitAuthenticationAsync();
         await vpn.SendSignalAsync(Signal.SIGTERM);
-        vpn.ConsoleLineReceived += (_, message) =>
-        {
-            File.AppendAllText("log.txt", message + Environment.NewLine);
-        };
-        vpn.ManagementLineReceived += (_, message) =>
-        {
-            File.AppendAllText("log.txt", message + Environment.NewLine);
-        };
     }
 
     [TestMethod]
     public async Task GetPidTest()
     {
         using var vpn = new HOpenVpn();
+        vpn.ConsoleLineReceived += (_, message) =>
+        {
+            Console.WriteLine(message);
+        };
+        vpn.ManagementLineReceived += (_, message) =>
+        {
+            Console.WriteLine(message);
+        };
+
         vpn.Start(Config, Username, Password);
 
         await vpn.WaitAuthenticationAsync();
 
-        vpn.ConsoleLineReceived += (_, message) =>
-        {
-            File.AppendAllText("log.txt", message + Environment.NewLine);
-        };
-        vpn.ManagementLineReceived += (_, message) =>
-        {
-            File.AppendAllText("log.txt", message + Environment.NewLine);
-        };
         var pid = await vpn.GetPidAsync();
         Assert.AreNotEqual(pid, 0);
     }
@@ -184,6 +195,15 @@ c401cb08c3ed2901725b0601d2b5de89
     public async Task GetStatesTest()
     {
         using var vpn = new HOpenVpn();
+        vpn.ConsoleLineReceived += (_, message) =>
+        {
+            Console.WriteLine(message);
+        };
+        vpn.ManagementLineReceived += (_, message) =>
+        {
+            Console.WriteLine(message);
+        };
+
         vpn.Start(Config, Username, Password);
 
         await vpn.WaitAuthenticationAsync();
@@ -195,6 +215,15 @@ c401cb08c3ed2901725b0601d2b5de89
     public async Task GetLogsTest()
     {
         using var vpn = new HOpenVpn();
+        vpn.ConsoleLineReceived += (_, message) =>
+        {
+            Console.WriteLine(message);
+        };
+        vpn.ManagementLineReceived += (_, message) =>
+        {
+            Console.WriteLine(message);
+        };
+
         vpn.Start(Config, Username, Password);
 
         await vpn.WaitAuthenticationAsync();
