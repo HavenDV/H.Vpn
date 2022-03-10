@@ -35,10 +35,3 @@ public class FirewallSettings
 
     #endregion
 }
-
-public enum SplitTunnelingMode
-{
-    Off,
-    DisallowSelectedApps,
-    AllowSelectedApps,
-}
