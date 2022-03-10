@@ -174,7 +174,7 @@ public class HVpn : IDisposable
 #if DEBUG
                 Firewall.PermitAppId(providerKey, subLayerKey, @"C:\Program Files\H.Wfp\H.Wfp.exe", 13);
 #else
-                PermitAppId(providerKey, subLayerKey, GetGuiProcessPath(), 13);
+                Firewall.PermitAppId(providerKey, subLayerKey, GetGuiProcessPath(), 13);
 #endif
 
                 if (settings.AllowLan)
