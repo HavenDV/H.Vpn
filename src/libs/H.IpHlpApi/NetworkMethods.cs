@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -11,6 +8,30 @@ namespace H.IpHlpApi;
 
 public static class NetworkMethods
 {
+    public static void AddSplitTunnelRoutes(IPAddress vpnIp)
+    {
+        var (index, metric) = FindInterfaceIndexAndMetricByIp(vpnIp);
+        if (index == 0)
+        {
+            throw new ArgumentException($"Failed to find interface index and metric for {vpnIp}");
+        }
+
+        AddRoute(IPNetwork.Parse("0.0.0.0/128.0.0.0"), index, metric);
+        AddRoute(IPNetwork.Parse("128.0.0.0/128.0.0.0"), index, metric);
+    }
+
+    public static void RemoveSplitTunnelRoutes(IPAddress vpnIp)
+    {
+        var (index, _) = FindInterfaceIndexAndMetricByIp(vpnIp);
+        if (index == 0)
+        {
+            throw new ArgumentException($"Failed to find interface index and metric for {vpnIp}");
+        }
+
+        DeleteRoute(IPNetwork.Parse("128.0.0.0/128.0.0.0"), index);
+        DeleteRoute(IPNetwork.Parse("0.0.0.0/128.0.0.0"), index);
+    }
+
     public static void AddRoute(
         IPNetwork network,
         uint interfaceIndex, 

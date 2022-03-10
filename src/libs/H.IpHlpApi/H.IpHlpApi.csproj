@@ -7,11 +7,12 @@
 
   <PropertyGroup Label="NuGet">
     <Description>C# wrapper library for IpHlpApi</Description>
-    <PackageTags>IpHlpApi, net-standard</PackageTags>
+    <PackageTags>iphlpapi, net-standard</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="IPNetwork2" Version="2.5.402" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
 </Project>

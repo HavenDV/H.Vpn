@@ -1,4 +1,5 @@
 ﻿using H.Firewall;
+using H.IpHlpApi;
 using H.OpenVpn;
 using System.Net;
 using System.Reflection;
@@ -62,7 +63,7 @@ public class HVpn : IDisposable
         {
             try
             {
-                HFirewall.RemoveSplitTunnelRoutes(IPAddress.Parse(VpnIp));
+                NetworkMethods.RemoveSplitTunnelRoutes(IPAddress.Parse(VpnIp));
             }
             catch (Exception exception)
             {
@@ -106,7 +107,7 @@ public class HVpn : IDisposable
         {
             try
             {
-                HFirewall.RemoveSplitTunnelRoutes(IPAddress.Parse(VpnIp));
+                NetworkMethods.RemoveSplitTunnelRoutes(IPAddress.Parse(VpnIp));
             }
             catch (Exception exception)
             {
@@ -118,7 +119,7 @@ public class HVpn : IDisposable
         {
             try
             {
-                HFirewall.AddSplitTunnelRoutes(IPAddress.Parse(vpnIp));
+                NetworkMethods.AddSplitTunnelRoutes(IPAddress.Parse(vpnIp));
             }
             catch (Exception exception)
             {
@@ -183,7 +184,8 @@ public class HVpn : IDisposable
 
                 Firewall.PermitDns(providerKey, subLayerKey, 11, 10, settings.PrimaryDns, settings.SecondaryDns);
                 Firewall.PermitIKEv2(providerKey, subLayerKey, 9);
-                Firewall.PermitTapAdapter(providerKey, subLayerKey, 2);
+                // Permit Tap Adapter
+                Firewall.PermitNetworkInterface(providerKey, subLayerKey, 2, NetworkMethods.FindTapAdapterLuid());
                 Firewall.PermitLocalhost(providerKey, subLayerKey, 1);
 
                 // Block everything not allowed explicitly

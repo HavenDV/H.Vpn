@@ -1,5 +1,4 @@
-﻿using H.IpHlpApi;
-using H.Wfp;
+﻿using H.Wfp;
 using H.Wfp.Interop;
 using System.Net;
 using System.Net.Sockets;
@@ -16,30 +15,6 @@ public class HFirewall : IDisposable
     #endregion
 
     #region Methods
-
-    public static void AddSplitTunnelRoutes(IPAddress vpnIp)
-    {
-        var (index, metric) = NetworkMethods.FindInterfaceIndexAndMetricByIp(vpnIp);
-        if (index == 0)
-        {
-            throw new ArgumentException($"Failed to find interface index and metric for {vpnIp}");
-        }
-
-        NetworkMethods.AddRoute(IPNetwork.Parse("0.0.0.0/128.0.0.0"), index, metric);
-        NetworkMethods.AddRoute(IPNetwork.Parse("128.0.0.0/128.0.0.0"), index, metric);
-    }
-
-    public static void RemoveSplitTunnelRoutes(IPAddress vpnIp)
-    {
-        var (index, _) = NetworkMethods.FindInterfaceIndexAndMetricByIp(vpnIp);
-        if (index == 0)
-        {
-            throw new ArgumentException($"Failed to find interface index and metric for {vpnIp}");
-        }
-
-        NetworkMethods.DeleteRoute(IPNetwork.Parse("128.0.0.0/128.0.0.0"), index);
-        NetworkMethods.DeleteRoute(IPNetwork.Parse("0.0.0.0/128.0.0.0"), index);
-    }
 
     public void PermitLan(
         Guid providerKey,
@@ -81,14 +56,6 @@ public class HFirewall : IDisposable
     {
         PermitLocalSubNetworkV4(providerKey, subLayerKey, weight, IPNetwork.Parse("10.0.0.0/8"));
         PermitProtocolV4(providerKey, subLayerKey, weight, WtIPProto.cIPPROTO_IPinIP);
-    }
-
-    public void PermitTapAdapter(
-        Guid providerKey,
-        Guid subLayerKey,
-        byte weight)
-    {
-        PermitNetworkInterface(providerKey, subLayerKey, weight, NetworkMethods.FindTapAdapterLuid());
     }
 
     public void PermitLocalhost(

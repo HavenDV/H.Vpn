@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\H.Firewall\H.Firewall.csproj" />
+    <ProjectReference Include="..\H.IpHlpApi\H.IpHlpApi.csproj" />
     <ProjectReference Include="..\H.OpenVpn\H.OpenVpn.csproj" />
   </ItemGroup>
 

@@ -7,15 +7,15 @@
 
   <PropertyGroup Label="NuGet">
     <Description>C# high-level firewall library</Description>
-    <PackageTags>firewall, wfp, iphlpapi, windows-filtering-platform, net-standard</PackageTags>
+    <PackageTags>firewall, wfp, windows-filtering-platform, net-standard</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="IPNetwork2" Version="2.5.402" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\H.IpHlpApi\H.IpHlpApi.csproj" />
     <ProjectReference Include="..\H.Wfp\H.Wfp.csproj" />
   </ItemGroup>
 
