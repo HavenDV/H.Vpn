@@ -401,10 +401,18 @@ Time: {state.Time:T}");
         Dispose();
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            OpenVpn.Dispose();
+            Firewall.Dispose();
+        }
+    }
+
     public void Dispose()
     {
-        OpenVpn.Dispose();
-        Firewall.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 

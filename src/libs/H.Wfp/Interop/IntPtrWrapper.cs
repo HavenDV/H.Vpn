@@ -40,7 +40,7 @@ public class IntPtrWrapper : IDisposable
         }
     }
 
-    public void Dispose()
+    protected virtual void Dispose(bool disposing)
     {
         if (IsEmpty)
         {
@@ -49,6 +49,12 @@ public class IntPtrWrapper : IDisposable
 
         DisposeAction?.Invoke(IntPtr);
         IntPtr = IntPtr.Zero;
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     public static implicit operator IntPtr(IntPtrWrapper wrapper)

@@ -188,42 +188,49 @@ public class HOpenVpn : IDisposable
         Dispose();
     }
 
-    public void Dispose()
+    protected virtual void Dispose(bool disposing)
     {
-        ManagementCancellation?.Cancel();
-        ConsoleCancellation?.Cancel();
-
-        try
+        if (disposing)
         {
-            Process?.Kill();
-        }
-        catch (InvalidOperationException)
-        {
-            // ignored
-        }
+            ManagementCancellation?.Cancel();
+            ConsoleCancellation?.Cancel();
 
-        TcpClientWrapper?.Dispose();
-        TcpClientWrapper = null;
-        Process?.Dispose();
-        Process = null;
-        ManagementCancellation?.Dispose();
-        ManagementCancellation = null;
-        ConsoleCancellation?.Dispose();
-        ConsoleCancellation = null;
-
-        try
-        {
-            if (ConfigPath != null && File.Exists(ConfigPath))
+            try
             {
-                File.Delete(ConfigPath);
-                ConfigPath = null;
+                Process?.Kill();
+            }
+            catch (InvalidOperationException)
+            {
+                // ignored
+            }
+
+            TcpClientWrapper?.Dispose();
+            TcpClientWrapper = null;
+            Process?.Dispose();
+            Process = null;
+            ManagementCancellation?.Dispose();
+            ManagementCancellation = null;
+            ConsoleCancellation?.Dispose();
+            ConsoleCancellation = null;
+
+            try
+            {
+                if (ConfigPath != null && File.Exists(ConfigPath))
+                {
+                    File.Delete(ConfigPath);
+                    ConfigPath = null;
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
             }
         }
-        catch (Exception)
-        {
-            // ignored
-        }
+    }
 
+    public void Dispose()
+    {
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 

@@ -185,10 +185,18 @@ namespace H.VpnService
             Dispose();
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                IpcServer.Dispose();
+                Vpn.Dispose();
+            }
+        }
+
         public void Dispose()
         {
-            IpcServer.Dispose();
-            Vpn.Dispose();
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 

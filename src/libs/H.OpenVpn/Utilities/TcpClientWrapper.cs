@@ -52,9 +52,17 @@ public class TcpClientWrapper : IDisposable
         }
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            TcpClient.Close();
+        }
+    }
+
     public void Dispose()
     {
-        TcpClient.Close();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 

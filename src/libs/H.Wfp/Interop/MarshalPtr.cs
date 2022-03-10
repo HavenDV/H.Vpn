@@ -27,9 +27,18 @@ public class MarshalPtr<T> : IDisposable
 
     #region Methods
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            IntPtrWrapper.Dispose();
+        }
+    }
+
     public void Dispose()
     {
-        IntPtrWrapper.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     public static implicit operator IntPtr(MarshalPtr<T> guidPtr)

@@ -249,9 +249,17 @@ public class IpcServer : IDisposable
         Dispose();
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            PipeServer.Dispose();
+        }
+    }
+
     public void Dispose()
     {
-        PipeServer.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 

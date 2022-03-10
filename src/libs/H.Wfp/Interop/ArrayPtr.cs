@@ -39,9 +39,18 @@ public class ArrayPtr<T> : IDisposable
 
     #region Methods
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            IntPtrWrapper.Dispose();
+        }
+    }
+
     public void Dispose()
     {
-        IntPtrWrapper.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     public static implicit operator IntPtr(ArrayPtr<T> ptr)
