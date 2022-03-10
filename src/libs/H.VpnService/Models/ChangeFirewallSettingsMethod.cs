@@ -26,7 +26,7 @@ public class ChangeFirewallSettingsMethod : RpcMethod
     public SplitTunnelingMode SplitTunnelingMode { get; set; }
 
     [JsonProperty("splitTunnelingApps", Required = Required.Always)]
-    public ICollection<string>? SplitTunnelingApps { get; set; }
+    public IReadOnlyCollection<string>? SplitTunnelingApps { get; set; }
 
     [JsonProperty("localIP", Required = Required.Always)]
     public string? LocalIp { get; set; }

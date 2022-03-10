@@ -10,7 +10,7 @@ public class FirewallSettings
     public string PrimaryDns { get; set; } = string.Empty;
     public string SecondaryDns { get; set; } = string.Empty;
     public SplitTunnelingMode SplitTunnelingMode { get; set; } = SplitTunnelingMode.Off;
-    public ICollection<string> SplitTunnelingApps { get; set; } = new List<string>();
+    public IReadOnlyCollection<string> SplitTunnelingApps { get; set; } = Array.Empty<string>();
     public string LocalIp { get; set; } = string.Empty;
 
     #endregion
@@ -19,6 +19,8 @@ public class FirewallSettings
 
     public bool Equals(FirewallSettings other)
     {
+        other = other ?? throw new ArgumentNullException(nameof(other));
+
         return
             EnableFirewallOnStart == other.EnableFirewallOnStart &&
             EnableKillSwitch == other.EnableKillSwitch &&

@@ -115,7 +115,7 @@ public static class NetworkMethods
         return ConvertInterfaceLuidToGuid(luid);
     }
 
-    public static void EnsureResultIsNull(NativeMethods.ERROR result)
+    internal static void EnsureResultIsNull(NativeMethods.ERROR result)
     {
         if (result != NativeMethods.ERROR.ERROR_SUCCESS)
         {

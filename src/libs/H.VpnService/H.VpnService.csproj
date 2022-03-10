@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net4.6.1</TargetFrameworks>
-    <NoWarn>$(NoWarn)</NoWarn>
+    <NoWarn>$(NoWarn);CA1031;CA1063;CA1003</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet">

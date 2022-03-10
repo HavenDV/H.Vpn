@@ -185,14 +185,14 @@ public class IpcServer : IDisposable
             }
         };
 
-        await PipeServer.StartAsync(cancellationToken);
+        await PipeServer.StartAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task WriteAsync(RpcResponse response, CancellationToken cancellationToken = default)
     {
         var json = JsonConvert.SerializeObject(new[] {response});
 
-        await PipeServer.WriteAsync(json, cancellationToken);
+        await PipeServer.WriteAsync(json, cancellationToken).ConfigureAwait(false);
 
         OnMessageSent(json);
         OnResponseSent(response);
@@ -203,7 +203,7 @@ public class IpcServer : IDisposable
         await WriteAsync(new LogResponse
         {
             Text = text,
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SendTrafficStatsAsync(long bytesIn, long bytesOut, CancellationToken cancellationToken = default)
@@ -212,7 +212,7 @@ public class IpcServer : IDisposable
         {
             BytesIn = bytesIn,
             BytesOut = bytesOut,
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SendOptionsAsync(
@@ -226,7 +226,7 @@ public class IpcServer : IDisposable
             Id = id,
             AllowLan = allowLan,
             IsKillSwitchEnabled = isKillSwitchEnabled,
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SendVersionAsync(
@@ -241,7 +241,7 @@ public class IpcServer : IDisposable
             Identifier = "com.H.VpnService.v1.desktop.service",
             Description = $"H.VpnService service for VPN connections (v{version})",
             Version = $"v{version}",
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     public void Stop()
@@ -252,6 +252,7 @@ public class IpcServer : IDisposable
     public void Dispose()
     {
         PipeServer.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     #endregion

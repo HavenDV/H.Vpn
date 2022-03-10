@@ -45,7 +45,7 @@ namespace H.VpnService
                     await IpcServer.WriteAsync(new StatusResponse
                     {
                         Status = args,
-                    });
+                    }).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -56,7 +56,7 @@ namespace H.VpnService
             {
                 try
                 {
-                    await IpcServer.SendTrafficStatsAsync(args.bytesIn, args.bytesOut);
+                    await IpcServer.SendTrafficStatsAsync(args.bytesIn, args.bytesOut).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -84,7 +84,7 @@ namespace H.VpnService
             {
                 try
                 {
-                    await Vpn.StartVpnAsync(method.OVpn, method.Username, method.Password);
+                    await Vpn.StartVpnAsync(method.OVpn, method.Username, method.Password).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -95,7 +95,7 @@ namespace H.VpnService
             {
                 try
                 {
-                    await Vpn.StopVpnAsync();
+                    await Vpn.StopVpnAsync().ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -110,7 +110,7 @@ namespace H.VpnService
                     {
                         Id = method.Id,
                         Status = Vpn.Status,
-                    });
+                    }).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -124,7 +124,7 @@ namespace H.VpnService
                     await IpcServer.SendOptionsAsync(
                         method.Id, 
                         Vpn.FirewallSettings.AllowLan,
-                        Vpn.FirewallSettings.EnableKillSwitch);
+                        Vpn.FirewallSettings.EnableKillSwitch).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -135,7 +135,7 @@ namespace H.VpnService
             {
                 try
                 {
-                    await IpcServer.SendVersionAsync(method.Id, Vpn.GetVersion());
+                    await IpcServer.SendVersionAsync(method.Id, HVpn.GetVersion()).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -175,7 +175,7 @@ namespace H.VpnService
                 }
             };
 
-            await IpcServer.StartAsync(cancellationToken);
+            await IpcServer.StartAsync(cancellationToken).ConfigureAwait(false);
 
             OnLogReceived("Started");
         }
@@ -189,6 +189,7 @@ namespace H.VpnService
         {
             IpcServer.Dispose();
             Vpn.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         #endregion

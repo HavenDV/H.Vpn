@@ -6,6 +6,8 @@ public class State
 
     public static State Parse(string line)
     {
+        line = line ?? throw new ArgumentNullException(nameof(line));
+
         var values = line.Split(',');
 
         return new State(

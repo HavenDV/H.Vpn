@@ -54,10 +54,10 @@
     </PackageReference>
   </ItemGroup>
 
-  <!--<PropertyGroup Label="Analyzers">
+  <PropertyGroup Label="Analyzers">
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-  </PropertyGroup>-->
+    <AnalysisMode>All</AnalysisMode>
+  </PropertyGroup>
 
 </Project>

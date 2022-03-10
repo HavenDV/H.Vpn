@@ -6,6 +6,8 @@ public static class IpAddressExtensions
 {
     public static uint ToInteger(this IPAddress address)
     {
+        address = address ?? throw new ArgumentNullException(nameof(address));
+
         var bytes = address.GetAddressBytes();
 
         // flip big-endian(network order) to little-endian

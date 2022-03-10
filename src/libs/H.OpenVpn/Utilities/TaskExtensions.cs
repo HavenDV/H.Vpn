@@ -4,6 +4,8 @@ public static class TaskExtensions
 {
     public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
     {
+        task = task ?? throw new ArgumentNullException(nameof(task));
+
         return task.IsCompleted
             ? task
             : task.ContinueWith(
@@ -15,6 +17,8 @@ public static class TaskExtensions
 
     public static Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
     {
+        task = task ?? throw new ArgumentNullException(nameof(task));
+
         return task.IsCompleted
             ? task
             : task.ContinueWith(

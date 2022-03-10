@@ -17,7 +17,7 @@ public class HFirewall : IDisposable
 
     #region Methods
 
-    public void AddSplitTunnelRoutes(IPAddress vpnIp)
+    public static void AddSplitTunnelRoutes(IPAddress vpnIp)
     {
         var (index, metric) = NetworkMethods.FindInterfaceIndexAndMetricByIp(vpnIp);
         if (index == 0)
@@ -29,7 +29,7 @@ public class HFirewall : IDisposable
         NetworkMethods.AddRoute(IPNetwork.Parse("128.0.0.0/128.0.0.0"), index, metric);
     }
 
-    public void RemoveSplitTunnelRoutes(IPAddress vpnIp)
+    public static void RemoveSplitTunnelRoutes(IPAddress vpnIp)
     {
         var (index, _) = NetworkMethods.FindInterfaceIndexAndMetricByIp(vpnIp);
         if (index == 0)
@@ -171,6 +171,8 @@ public class HFirewall : IDisposable
 
     public void RunTransaction(Action<IntPtr> action)
     {
+        action = action ?? throw new ArgumentNullException(nameof(action));
+
         var ptr = (IntPtr)WfpSession;
 
         WfpMethods.BeginTransaction(ptr);
@@ -506,6 +508,8 @@ public class HFirewall : IDisposable
         byte weight,
         IPNetwork network)
     {
+        network = network ?? throw new ArgumentNullException(nameof(network));
+
         PermitSubNetworkV4(providerKey, subLayerKey, weight, network.Network, network.Netmask, true);
     }
 
@@ -515,6 +519,8 @@ public class HFirewall : IDisposable
         byte weight,
         IPNetwork network)
     {
+        network = network ?? throw new ArgumentNullException(nameof(network));
+
         PermitSubNetworkV4(providerKey, subLayerKey, weight, network.Network, network.Netmask, false);
     }
 
@@ -573,9 +579,18 @@ public class HFirewall : IDisposable
         return WfpMethods.GetAppIdFromFileName(fileName);
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            WfpSession.Dispose();
+        }
+    }
+
     public void Dispose()
     {
-        WfpSession.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     #endregion

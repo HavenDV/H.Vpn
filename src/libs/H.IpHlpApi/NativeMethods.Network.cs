@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace H.IpHlpApi;
 
-public partial class NativeMethods
+internal partial class NativeMethods
 {
     [DllImport("Iphlpapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern ERROR GetAdaptersInfo(IntPtr pAdapterInfo, ref uint outBufLen);
@@ -47,17 +47,22 @@ public partial class NativeMethods
 
     [DllImport("iphlpapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern uint GetIpForwardTable(IntPtr pIpForwardTable, ref uint dwSize, bool bOrder);
+
     [DllImport("iphlpapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern void InitializeIpForwardEntry(out IntPtr PMIB_IPFORWARD_ROW2);
+
     [DllImport("iphlpapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern ERROR CreateIpForwardEntry(IntPtr pRoute);
+
     [DllImport("iphlpapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern uint SetIpForwardEntry(IntPtr pRoute);
+
     [DllImport("iphlpapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern uint DeleteIpForwardEntry(IntPtr pRoute);
 
     [DllImport("iphlpapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern ERROR GetExtendedTcpTable(IntPtr pTcpTable, ref int dwSize, bool bOrder, FAMILY Family, TCP_TABLE_CLASS TableClass, uint Reserved);
+    
     [DllImport("iphlpapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern ERROR GetExtendedUdpTable(IntPtr pUdpTable, ref int dwSize, bool bOrder, FAMILY Family, UDP_TABLE_CLASS TableClass, uint Reserved);
 

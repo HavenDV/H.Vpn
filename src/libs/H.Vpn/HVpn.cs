@@ -56,11 +56,13 @@ public class HVpn : IDisposable
 
     public void ChangeFirewallSettings(FirewallSettings settings, string vpnIp)
     {
+        settings = settings ?? throw new ArgumentNullException(nameof(settings));
+
         if (!string.IsNullOrWhiteSpace(VpnIp))
         {
             try
             {
-                Firewall.RemoveSplitTunnelRoutes(IPAddress.Parse(VpnIp));
+                HFirewall.RemoveSplitTunnelRoutes(IPAddress.Parse(VpnIp));
             }
             catch (Exception exception)
             {
@@ -104,7 +106,7 @@ public class HVpn : IDisposable
         {
             try
             {
-                Firewall.RemoveSplitTunnelRoutes(IPAddress.Parse(VpnIp));
+                HFirewall.RemoveSplitTunnelRoutes(IPAddress.Parse(VpnIp));
             }
             catch (Exception exception)
             {
@@ -116,7 +118,7 @@ public class HVpn : IDisposable
         {
             try
             {
-                Firewall.AddSplitTunnelRoutes(IPAddress.Parse(vpnIp));
+                HFirewall.AddSplitTunnelRoutes(IPAddress.Parse(vpnIp));
             }
             catch (Exception exception)
             {
@@ -131,7 +133,7 @@ public class HVpn : IDisposable
     public static string GetServiceProcessPath()
     {
         var path = Assembly.GetEntryAssembly()?.Location ?? string.Empty;
-        if (path == null || string.IsNullOrWhiteSpace(path))
+        if (string.IsNullOrWhiteSpace(path))
         {
             throw new InvalidOperationException("This method only works when running exe files.");
         }
@@ -265,7 +267,7 @@ public class HVpn : IDisposable
                         break;
 
                     case VpnState.Connected:
-                        await OpenVpn.SubscribeByteCountAsync();
+                        await OpenVpn.SubscribeByteCountAsync().ConfigureAwait(false);
 
                         Status.Status = "connected";
                         Status.ConnectionStartDate = DateTime.UtcNow;
@@ -350,9 +352,9 @@ Time: {state.Time:T}");
         };
         OpenVpn.Start(config,  username,  password);
 
-        await OpenVpn.WaitAuthenticationAsync(cancellationToken);
+        await OpenVpn.WaitAuthenticationAsync(cancellationToken).ConfigureAwait(false);
 
-        await OpenVpn.SubscribeStateAsync(cancellationToken);
+        await OpenVpn.SubscribeStateAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task StopVpnAsync(CancellationToken cancellationToken = default)
@@ -371,7 +373,7 @@ Time: {state.Time:T}");
             case VpnState.Connected:
                 OpenVpn.VpnState = VpnState.Disconnecting;
 
-                await OpenVpn.SendSignalAsync(Signal.SIGTERM);
+                await OpenVpn.SendSignalAsync(Signal.SIGTERM, cancellationToken).ConfigureAwait(false);
 
                 OpenVpn.WaitForExit(TimeSpan.FromSeconds(5));
                 OpenVpn.VpnState = VpnState.Inactive;
@@ -389,7 +391,7 @@ Time: {state.Time:T}");
         OpenVpn.Dispose();
     }
 
-    public Version GetVersion()
+    public static Version GetVersion()
     {
         return Assembly.GetExecutingAssembly().GetName().Version;
     }
@@ -403,6 +405,7 @@ Time: {state.Time:T}");
     {
         OpenVpn.Dispose();
         Firewall.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     #endregion

@@ -223,6 +223,8 @@ public class HOpenVpn : IDisposable
         {
             // ignored
         }
+
+        GC.SuppressFinalize(this);
     }
 
     public async Task SendSignalAsync(Signal signal, CancellationToken cancellationToken = default)

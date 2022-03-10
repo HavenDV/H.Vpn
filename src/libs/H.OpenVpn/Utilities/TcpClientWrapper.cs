@@ -55,6 +55,7 @@ public class TcpClientWrapper : IDisposable
     public void Dispose()
     {
         TcpClient.Close();
+        GC.SuppressFinalize(this);
     }
 
     #endregion
