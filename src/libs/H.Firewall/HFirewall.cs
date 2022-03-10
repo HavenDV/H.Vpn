@@ -1,9 +1,9 @@
-﻿using System.Net;
-using System.Net.Sockets;
-using System.Reflection;
-using H.IpHlpApi;
+﻿using H.IpHlpApi;
 using H.Wfp;
 using H.Wfp.Interop;
+using System.Net;
+using System.Net.Sockets;
+using System.Reflection;
 
 namespace H.Firewall;
 
@@ -152,16 +152,132 @@ public class HFirewall : IDisposable
         }
     }
 
-    public void AllowLan(
+    public void PermitLan(
         Guid providerKey,
-        Guid subLayerKey)
+        Guid subLayerKey,
+        byte weight)
     {
-        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("192.168.0.0/16"));
-        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("172.16.0.0/12"));
-        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("10.0.0.0/8"));
-        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("224.0.0.0/4"));
-        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("169.254.0.0/16"));
-        PermitRemoteSubNetworkV4(providerKey, subLayerKey, 12, IPNetwork.Parse("255.255.255.255/32"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, weight, IPNetwork.Parse("192.168.0.0/16"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, weight, IPNetwork.Parse("172.16.0.0/12"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, weight, IPNetwork.Parse("10.0.0.0/8"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, weight, IPNetwork.Parse("224.0.0.0/4"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, weight, IPNetwork.Parse("169.254.0.0/16"));
+        PermitRemoteSubNetworkV4(providerKey, subLayerKey, weight, IPNetwork.Parse("255.255.255.255/32"));
+    }
+
+    public void PermitDns(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weightAllow,
+        byte weightDeny,
+        params string[] servers)
+    {
+        var dnsServers = new List<IPAddress>();
+        foreach (var server in servers
+            .Where(static server => !string.IsNullOrWhiteSpace(server)))
+        {
+            dnsServers.Add(IPAddress.Parse(server));
+        }
+        if (!dnsServers.Any())
+        {
+            dnsServers.Add(IPAddress.Parse("10.255.0.1"));
+        }
+        PermitDns(providerKey, subLayerKey, weightAllow, weightDeny, dnsServers);
+    }
+
+    public void PermitIKEv2(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight)
+    {
+        PermitLocalSubNetworkV4(providerKey, subLayerKey, weight, IPNetwork.Parse("10.0.0.0/8"));
+        PermitProtocolV4(providerKey, subLayerKey, weight, WtIPProto.cIPPROTO_IPinIP);
+    }
+
+    public void PermitTapAdapter(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight)
+    {
+        PermitNetworkInterface(providerKey, subLayerKey, weight, NetworkMethods.FindTapAdapterLuid());
+    }
+
+    public void PermitLocalhost(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight)
+    {
+        PermitLoopback(providerKey, subLayerKey, weight);
+    }
+
+    public void EnableSplitTunnelingForSelectedApps(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        IPAddress localIp,
+        IPAddress vpnIp,
+        bool reversed,
+        params string[] applications)
+    {
+        RegisterCallout(providerKey);
+
+        var localProviderContextKey = RegisterProviderContext(
+            providerKey,
+            localIp);
+        AllowSplitApps(
+            providerKey,
+            subLayerKey,
+            applications,
+            weight,
+            localProviderContextKey,
+            !reversed);
+
+        var vpnProviderContextKey = RegisterProviderContext(
+            providerKey,
+            vpnIp);
+        AllowSplitApps(
+            providerKey,
+            subLayerKey,
+            applications,
+            weight,
+            vpnProviderContextKey,
+            reversed);
+    }
+
+    public void EnableSplitTunnelingOnlyForSelectedApps(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        IPAddress localIp,
+        IPAddress vpnIp,
+        params string[] applications)
+    {
+        EnableSplitTunnelingForSelectedApps(
+            providerKey,
+            subLayerKey,
+            weight,
+            localIp,
+            vpnIp,
+            false,
+            applications);
+    }
+
+    public void EnableSplitTunnelingExcludeSelectedApps(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        IPAddress localIp,
+        IPAddress vpnIp,
+        params string[] applications)
+    {
+        EnableSplitTunnelingForSelectedApps(
+            providerKey,
+            subLayerKey,
+            weight,
+            localIp,
+            vpnIp,
+            true,
+            applications);
     }
 
     public void StartSession(Settings settings, string vpnIp)
@@ -185,37 +301,15 @@ public class HFirewall : IDisposable
                 PermitAppId(providerKey, subLayerKey, GetGuiProcessPath(), 13);
 #endif
 
-                // LAN
                 if (settings.AllowLan)
                 {
-                    AllowLan(providerKey, subLayerKey);
+                    PermitLan(providerKey, subLayerKey, 12);
                 }
 
-                // DNS
-                var dnsServers = new List<IPAddress>();
-                if (!string.IsNullOrWhiteSpace(settings.PrimaryDns))
-                {
-                    dnsServers.Add(IPAddress.Parse(settings.PrimaryDns));
-                }
-                if (!string.IsNullOrWhiteSpace(settings.SecondaryDns))
-                {
-                    dnsServers.Add(IPAddress.Parse(settings.SecondaryDns));
-                }
-                if (!dnsServers.Any())
-                {
-                    dnsServers.Add(IPAddress.Parse("10.255.0.1"));
-                }
-                PermitDns(providerKey, subLayerKey, 11, 10, dnsServers);
-
-                // IKEv2
-                PermitLocalSubNetworkV4(providerKey, subLayerKey, 9, IPNetwork.Parse("10.0.0.0/8"));
-                PermitProtocolV4(providerKey, subLayerKey, 9, WtIPProto.cIPPROTO_IPinIP);
-
-                // TAP adapter
-                PermitNetworkInterface(providerKey, subLayerKey, 2, NetworkMethods.FindTapAdapterLuid());
-
-                // Localhost
-                PermitLoopback(providerKey, subLayerKey, 1);
+                PermitDns(providerKey, subLayerKey, 11, 10, settings.PrimaryDns, settings.SecondaryDns);
+                PermitIKEv2(providerKey, subLayerKey, 9);
+                PermitTapAdapter(providerKey, subLayerKey, 2);
+                PermitLocalhost(providerKey, subLayerKey, 1);
 
                 // Block everything not allowed explicitly
                 BlockAll(providerKey, subLayerKey, 0);
@@ -225,57 +319,25 @@ public class HFirewall : IDisposable
             {
                 case SplitTunnelingMode.AllowSelectedApps:
                     {
-                        RegisterCallout(providerKey);
-
-                        var localProviderContextKey = RegisterProviderContext(
-                            providerKey,
-                            IPAddress.Parse(settings.LocalIp));
-                        AllowSplitApps(
+                        EnableSplitTunnelingOnlyForSelectedApps(
                             providerKey,
                             subLayerKey,
-                            settings.SplitTunnelingApps,
                             8,
-                            localProviderContextKey,
-                            true);
-
-                        var vpnProviderContextKey = RegisterProviderContext(
-                            providerKey,
-                            IPAddress.Parse(vpnIp));
-                        AllowSplitApps(
-                            providerKey,
-                            subLayerKey,
-                            settings.SplitTunnelingApps,
-                            8,
-                            vpnProviderContextKey,
-                            false);
+                            IPAddress.Parse(settings.LocalIp),
+                            IPAddress.Parse(vpnIp),
+                            settings.SplitTunnelingApps.ToArray());
                         break;
                     }
 
                 case SplitTunnelingMode.DisallowSelectedApps:
                     {
-                        RegisterCallout(providerKey);
-
-                        var localProviderContextKey = RegisterProviderContext(
-                            providerKey,
-                            IPAddress.Parse(settings.LocalIp));
-                        AllowSplitApps(
+                        EnableSplitTunnelingExcludeSelectedApps(
                             providerKey,
                             subLayerKey,
-                            settings.SplitTunnelingApps,
                             8,
-                            localProviderContextKey,
-                            false);
-
-                        var vpnProviderContextKey = RegisterProviderContext(
-                            providerKey,
-                            IPAddress.Parse(vpnIp));
-                        AllowSplitApps(
-                            providerKey,
-                            subLayerKey,
-                            settings.SplitTunnelingApps,
-                            8,
-                            vpnProviderContextKey,
-                            true);
+                            IPAddress.Parse(settings.LocalIp),
+                            IPAddress.Parse(vpnIp),
+                            settings.SplitTunnelingApps.ToArray());
                         break;
                     }
             }
