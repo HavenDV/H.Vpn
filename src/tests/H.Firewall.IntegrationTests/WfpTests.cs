@@ -9,69 +9,39 @@ public class WfpTests
         using var firewall = new HFirewall();
 
         firewall.Start();
-        firewall.RegisterKeys();
+        _ = firewall.RegisterKeys();
     }
 
     [TestMethod]
-    public void ChangeSettingsTest()
-    {
-        using var firewall = new HFirewall();
-
-        firewall.ChangeSettings(new Settings
-        {
-            EnableFirewallOnStart = true,
-            EnableKillSwitch = false,
-            AllowLan = true,
-            PrimaryDns = "10.255.0.1",
-            SecondaryDns = string.Empty,
-            SplitTunnelingMode = SplitTunnelingMode.Off,
-            SplitTunnelingApps = new List<string>(),
-            LocalIp = "192.168.1.33",
-        }, string.Empty);
-    }
-
-    [TestMethod]
-    public async Task ChangeSettingsKillSwitchTest()
-    {
-        using var firewall = new HFirewall();
-
-        firewall.ChangeSettings(new Settings
-        {
-            EnableFirewallOnStart = true,
-            EnableKillSwitch = true,
-            AllowLan = true,
-            PrimaryDns = "10.255.0.1",
-            SecondaryDns = string.Empty,
-            SplitTunnelingMode = SplitTunnelingMode.Off,
-            SplitTunnelingApps = new List<string>(),
-            LocalIp = "192.168.1.33",
-        }, string.Empty);
-
-        await Task.Delay(TimeSpan.FromSeconds(15));
-    }
-
-    // ReSharper disable AccessToDisposedClosure
-    [TestMethod]
-    public void PermitAppIdTest()
+    public async Task AllowOnlyChromeLanDnsAndLocalhostTest()
     {
         using var firewall = new HFirewall();
 
         firewall.Start();
-
         firewall.RunTransaction(ptr =>
         {
-            var keys = firewall.RegisterKeys();
+            var (providerKey, subLayerKey) = firewall.RegisterKeys();
+            firewall.PermitAppId(
+                providerKey,
+                subLayerKey,
+                @"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe",
+                15);
 
-            firewall.PermitAppId(keys, @"C:\Program Files\H.Wfp\H.Wfp\Service\H.Wfp.Service.exe", 15);
-            firewall.PermitAppId(keys, @"C:\Program Files\H.Wfp\H.Wfp\Service\OpenVPN\openvpn.exe", 14);
-            firewall.PermitAppId(keys, @"C:\Program Files\H.Wfp\H.Wfp\H.Wfp.exe", 13);
+            firewall.PermitLan(providerKey, subLayerKey, 12);
+            firewall.PermitDns(providerKey, subLayerKey, 11, 10);
+            firewall.PermitLocalhost(providerKey, subLayerKey, 1);
+
+            // Block everything not allowed explicitly
+            firewall.BlockAll(providerKey, subLayerKey, 0);
         });
+
+        await Task.Delay(TimeSpan.FromSeconds(15));
     }
 
     [TestMethod]
     public void GetAppIdFromFileNameTest()
     {
-        using (HFirewall.GetAppId(@"C:\Program Files\H.Wfp\H.Wfp.exe"))
+        using (HFirewall.GetAppId(@"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe"))
         {
         }
     }

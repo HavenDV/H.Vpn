@@ -3,7 +3,6 @@ using H.Wfp;
 using H.Wfp.Interop;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
 
 namespace H.Firewall;
 
@@ -12,144 +11,34 @@ public class HFirewall : IDisposable
     #region Properties
 
     public IntPtrWrapper WfpSession { get; private set; } = new IntPtrWrapper();
-    public Settings Settings { get; private set; } = new Settings();
-    public string VpnIp { get; private set; } = string.Empty;
     public bool IsEnabled => !WfpSession.IsEmpty;
-
-    #endregion
-
-    #region Events
-
-    public event EventHandler<string>? LogReceived;
-
-    private void OnLogReceived(string value)
-    {
-        LogReceived?.Invoke(this, value);
-    }
 
     #endregion
 
     #region Methods
 
-    public void ChangeSettings(Settings settings, string vpnIp)
+    public void AddSplitTunnelRoutes(IPAddress vpnIp)
     {
-        if (!string.IsNullOrWhiteSpace(VpnIp))
+        var (index, metric) = NetworkMethods.FindInterfaceIndexAndMetricByIp(vpnIp);
+        if (index == 0)
         {
-            RemoveSplitTunnelRoutes(VpnIp);
+            throw new ArgumentException($"Failed to find interface index and metric for {vpnIp}");
         }
 
-        if (IsEnabled)
-        {
-            if (Settings.Equals(settings) &&
-                VpnIp == vpnIp)
-            {
-                return;
-            }
-
-            Dispose();
-        }
-
-        if (!settings.EnableKillSwitch &&
-            settings.SplitTunnelingMode == SplitTunnelingMode.Off)
-        {
-            return;
-        }
-
-        if (settings.SplitTunnelingMode != SplitTunnelingMode.Off)
-        {
-            try
-            {
-                //StartServiceIfNotRunning("STDriver");
-            }
-            catch (Exception)
-            {
-                settings.SplitTunnelingMode = SplitTunnelingMode.Off;
-            }
-        }
-
-        StartSession(settings, vpnIp);
-
-        if (!string.IsNullOrWhiteSpace(VpnIp) &&
-            VpnIp != vpnIp)
-        {
-            RemoveSplitTunnelRoutes(VpnIp);
-        }
-
-        if (!string.IsNullOrWhiteSpace(vpnIp))
-        {
-            AddSplitTunnelRoutes(vpnIp);
-        }
-
-        Settings = settings;
-        VpnIp = vpnIp;
+        NetworkMethods.AddRoute(IPNetwork.Parse("0.0.0.0/128.0.0.0"), index, metric);
+        NetworkMethods.AddRoute(IPNetwork.Parse("128.0.0.0/128.0.0.0"), index, metric);
     }
 
-    public void AddSplitTunnelRoutes(string vpnIp)
+    public void RemoveSplitTunnelRoutes(IPAddress vpnIp)
     {
-        try
+        var (index, _) = NetworkMethods.FindInterfaceIndexAndMetricByIp(vpnIp);
+        if (index == 0)
         {
-            var (index, metric) = NetworkMethods.FindInterfaceIndexAndMetricByIp(IPAddress.Parse(vpnIp));
-            if (index == 0)
-            {
-                throw new ArgumentException($"Failed to find interface index and metric for {vpnIp}");
-            }
-
-            try
-            {
-                NetworkMethods.AddRoute(IPNetwork.Parse("0.0.0.0/128.0.0.0"), index, metric);
-            }
-            catch (Exception exception)
-            {
-                OnLogReceived(exception.Message);
-            }
-
-            try
-            {
-                NetworkMethods.AddRoute(IPNetwork.Parse("128.0.0.0/128.0.0.0"), index, metric);
-            }
-            catch (Exception exception)
-            {
-                OnLogReceived(exception.Message);
-            }
+            throw new ArgumentException($"Failed to find interface index and metric for {vpnIp}");
         }
-        catch (Exception exception)
-        {
-            OnLogReceived($"{exception}");
-        }
-    }
 
-    public void RemoveSplitTunnelRoutes(string vpnIp)
-    {
-        try
-        {
-            var (index, _) = NetworkMethods.FindInterfaceIndexAndMetricByIp(IPAddress.Parse(vpnIp));
-            if (index == 0)
-            {
-                throw new ArgumentException($"Failed to find interface index and metric for {vpnIp}");
-            }
-
-            try
-            {
-                NetworkMethods.DeleteRoute(IPNetwork.Parse("128.0.0.0/128.0.0.0"), index);
-            }
-            catch (Exception exception)
-            {
-                OnLogReceived(exception.Message);
-            }
-
-            try
-            {
-                NetworkMethods.DeleteRoute(IPNetwork.Parse("0.0.0.0/128.0.0.0"), index);
-            }
-            catch (Exception exception)
-            {
-                OnLogReceived(exception.Message);
-            }
-        }
-        catch (Exception exception)
-        {
-            OnLogReceived($"{exception}");
-        }
+        NetworkMethods.DeleteRoute(IPNetwork.Parse("128.0.0.0/128.0.0.0"), index);
+        NetworkMethods.DeleteRoute(IPNetwork.Parse("0.0.0.0/128.0.0.0"), index);
     }
 
     public void PermitLan(
@@ -280,70 +169,6 @@ public class HFirewall : IDisposable
             applications);
     }
 
-    public void StartSession(Settings settings, string vpnIp)
-    {
-        Start();
-
-        RunTransaction(ptr =>
-        {
-            var (providerKey, subLayerKey) = RegisterKeys();
-            if (settings.EnableKillSwitch)
-            {
-                // H.Wfp-Service.exe
-                PermitAppId(providerKey, subLayerKey, GetServiceProcessPath(), 15);
-                // OpenVPN.exe
-                PermitAppId(providerKey, subLayerKey, GetOpenVpnPath(), 14);
-
-                // H.Wfp.exe
-#if DEBUG
-                PermitAppId(providerKey, subLayerKey, @"C:\Program Files\H.Wfp\H.Wfp.exe", 13);
-#else
-                PermitAppId(providerKey, subLayerKey, GetGuiProcessPath(), 13);
-#endif
-
-                if (settings.AllowLan)
-                {
-                    PermitLan(providerKey, subLayerKey, 12);
-                }
-
-                PermitDns(providerKey, subLayerKey, 11, 10, settings.PrimaryDns, settings.SecondaryDns);
-                PermitIKEv2(providerKey, subLayerKey, 9);
-                PermitTapAdapter(providerKey, subLayerKey, 2);
-                PermitLocalhost(providerKey, subLayerKey, 1);
-
-                // Block everything not allowed explicitly
-                BlockAll(providerKey, subLayerKey, 0);
-            }
-
-            switch (settings.SplitTunnelingMode)
-            {
-                case SplitTunnelingMode.AllowSelectedApps:
-                    {
-                        EnableSplitTunnelingOnlyForSelectedApps(
-                            providerKey,
-                            subLayerKey,
-                            8,
-                            IPAddress.Parse(settings.LocalIp),
-                            IPAddress.Parse(vpnIp),
-                            settings.SplitTunnelingApps.ToArray());
-                        break;
-                    }
-
-                case SplitTunnelingMode.DisallowSelectedApps:
-                    {
-                        EnableSplitTunnelingExcludeSelectedApps(
-                            providerKey,
-                            subLayerKey,
-                            8,
-                            IPAddress.Parse(settings.LocalIp),
-                            IPAddress.Parse(vpnIp),
-                            settings.SplitTunnelingApps.ToArray());
-                        break;
-                    }
-            }
-        });
-    }
-
     public void RunTransaction(Action<IntPtr> action)
     {
         var ptr = (IntPtr)WfpSession;
@@ -363,18 +188,16 @@ public class HFirewall : IDisposable
         WfpMethods.CommitTransaction(ptr);
     }
 
-    public void Disable()
-    {
-        Dispose();
-        Settings.EnableKillSwitch = false;
-        Settings.AllowLan = false;
-    }
-
     public void Start()
     {
         WfpSession = new IntPtrWrapper(
             WfpMethods.CreateWfpSession("H.Wfp", "H.Wfp dynamic session"),
             WfpMethods.CloseWfpSession);
+    }
+
+    public void Stop()
+    {
+        Dispose();
     }
 
     public (Guid providerGuid, Guid subLayerGuid) RegisterKeys()
@@ -748,32 +571,6 @@ public class HFirewall : IDisposable
         }
 
         return WfpMethods.GetAppIdFromFileName(fileName);
-    }
-
-    public static string GetServiceProcessPath()
-    {
-        var path = Assembly.GetEntryAssembly()?.Location ?? string.Empty;
-        if (path == null || string.IsNullOrWhiteSpace(path))
-        {
-            throw new InvalidOperationException("This method only works when running exe files.");
-        }
-
-        return path;
-    }
-
-    public static string GetServiceProcessDirectory()
-    {
-        return Path.GetDirectoryName(GetServiceProcessPath()) ?? string.Empty;
-    }
-
-    public static string GetOpenVpnPath()
-    {
-        return Path.Combine(GetServiceProcessDirectory(), "OpenVPN", "openvpn.exe");
-    }
-
-    public static string GetGuiProcessPath()
-    {
-        return Path.Combine(Path.GetDirectoryName(GetServiceProcessDirectory()) ?? string.Empty, "H.Wfp.exe");
     }
 
     public void Dispose()

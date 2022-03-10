@@ -7,7 +7,7 @@
 
   <PropertyGroup Label="NuGet">
     <Description>C# high-level firewall library</Description>
-    <PackageTags>firewall, wfp, windows-filtering-platform, net-standard</PackageTags>
+    <PackageTags>firewall, wfp, iphlpapi, windows-filtering-platform, net-standard</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

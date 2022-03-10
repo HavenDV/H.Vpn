@@ -1,6 +1,6 @@
 ﻿namespace H.Firewall;
 
-public class Settings
+public class FirewallSettings
 {
     #region Properties
 
@@ -17,7 +17,7 @@ public class Settings
 
     #region Methods
 
-    public bool Equals(Settings other)
+    public bool Equals(FirewallSettings other)
     {
         return
             EnableFirewallOnStart == other.EnableFirewallOnStart &&

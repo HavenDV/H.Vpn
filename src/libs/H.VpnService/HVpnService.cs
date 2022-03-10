@@ -123,8 +123,8 @@ namespace H.VpnService
                 {
                     await IpcServer.SendOptionsAsync(
                         method.Id, 
-                        Vpn.Firewall.Settings.AllowLan,
-                        Vpn.Firewall.Settings.EnableKillSwitch);
+                        Vpn.FirewallSettings.AllowLan,
+                        Vpn.FirewallSettings.EnableKillSwitch);
                 }
                 catch (Exception exception)
                 {
@@ -146,7 +146,7 @@ namespace H.VpnService
             {
                 try
                 {
-                    Vpn.Firewall.ChangeSettings(new Settings
+                    Vpn.ChangeFirewallSettings(new FirewallSettings
                     {
                         EnableFirewallOnStart = true,
                         AllowLan = method.AllowLan,
@@ -167,7 +167,7 @@ namespace H.VpnService
             {
                 try
                 {
-                    Vpn.Firewall.Disable();
+                    Vpn.StopFirewall();
                 }
                 catch (Exception exception)
                 {
