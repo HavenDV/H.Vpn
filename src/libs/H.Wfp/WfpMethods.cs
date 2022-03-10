@@ -20,74 +20,65 @@ public static class WfpMethods
             txnWaitTimeoutInMSec = NativeConstants.INFINITE,
         };
 
-        var result = NativeMethods.FwpmEngineOpen0(
+        NativeMethods.FwpmEngineOpen0(
             null,
             NativeConstants.RPC_C_AUTHN_WINNT,
             IntPtr.Zero,
             ref session,
-            out var ptr);
-        EnsureResultIsNull(result);
+            out var ptr).EnsureResultIsNull();
 
         return ptr;
     }
 
     public static void CloseWfpSession(IntPtr ptr)
     {
-        var result = NativeMethods.FwpmEngineClose0(ptr);
-        EnsureResultIsNull(result);
+        NativeMethods.FwpmEngineClose0(ptr).EnsureResultIsNull();
     }
 
     public static void BeginTransaction(IntPtr ptr)
     {
-        var result = NativeMethods.FwpmTransactionBegin0(ptr, 0);
-        EnsureResultIsNull(result);
+        NativeMethods.FwpmTransactionBegin0(ptr, 0).EnsureResultIsNull();
     }
 
     public static void CommitTransaction(IntPtr ptr)
     {
-        var result = NativeMethods.FwpmTransactionCommit0(ptr);
-        EnsureResultIsNull(result);
+        NativeMethods.FwpmTransactionCommit0(ptr).EnsureResultIsNull();
     }
 
     public static void AbortTransaction(IntPtr ptr)
     {
-        var result = NativeMethods.FwpmTransactionAbort0(ptr);
-        EnsureResultIsNull(result);
+        NativeMethods.FwpmTransactionAbort0(ptr).EnsureResultIsNull();
     }
 
     public static Guid AddProviderContext(IntPtr ptr, Guid providerKey, string name, string description, IPAddress ipAddress)
     {
-        using (var providerKeyPtr = new StructurePtr<Guid>(providerKey))
-        using (var addressPtr = new BytesPtr(ipAddress.GetAddressBytes()))
-        using (var blobPtr = new StructurePtr<FWP_BYTE_BLOB_>(new FWP_BYTE_BLOB_
+        using var providerKeyPtr = new StructurePtr<Guid>(providerKey);
+        using var addressPtr = new BytesPtr(ipAddress.GetAddressBytes());
+        using var blobPtr = new StructurePtr<FWP_BYTE_BLOB_>(new FWP_BYTE_BLOB_
         {
             data = addressPtr,
             size = 4,
-        }))
+        });
+        var id = 0UL;
+        var guid = Guid.NewGuid();
+        var context = new FWPM_PROVIDER_CONTEXT0
         {
-            var id = 0UL;
-            var guid = Guid.NewGuid();
-            var context = new FWPM_PROVIDER_CONTEXT0
+            displayData = new FWPM_DISPLAY_DATA0_
             {
-                displayData = new FWPM_DISPLAY_DATA0_
-                {
-                    name = name,
-                    description = description,
-                },
-                type = FWPM_PROVIDER_CONTEXT_TYPE.FWPM_GENERAL_CONTEXT,
-                providerContextKey = guid,
-                union = new FWPM_PROVIDER_CONTEXT0_Union
-                {
-                    dataBuffer = blobPtr,
-                },
-                providerKey = providerKeyPtr,
-            };
-            var result = NativeMethods.FwpmProviderContextAdd0(ptr, ref context, IntPtr.Zero, ref id);
+                name = name,
+                description = description,
+            },
+            type = FWPM_PROVIDER_CONTEXT_TYPE.FWPM_GENERAL_CONTEXT,
+            providerContextKey = guid,
+            union = new FWPM_PROVIDER_CONTEXT0_Union
+            {
+                dataBuffer = blobPtr,
+            },
+            providerKey = providerKeyPtr,
+        };
+        NativeMethods.FwpmProviderContextAdd0(ptr, ref context, IntPtr.Zero, ref id).EnsureResultIsNull();
 
-            EnsureResultIsNull(result);
-
-            return guid;
-        }
+        return guid;
     }
 
     public static Guid AddProvider(IntPtr ptr, string name, string description)
@@ -102,43 +93,36 @@ public static class WfpMethods
                 description = description,
             },
         };
-        var result = NativeMethods.FwpmProviderAdd0(ptr, ref provider, IntPtr.Zero);
-
-        EnsureResultIsNull(result);
+        NativeMethods.FwpmProviderAdd0(ptr, ref provider, IntPtr.Zero).EnsureResultIsNull();
 
         return guid;
     }
 
     public static Guid AddSubLayer(IntPtr ptr, Guid providerKey, string name, string description)
     {
-        using (var providerKeyPtr = new StructurePtr<Guid>(providerKey))
+        using var providerKeyPtr = new StructurePtr<Guid>(providerKey);
+        var guid = Guid.NewGuid();
+        var provider = new FWPM_SUBLAYER0_
         {
-            var guid = Guid.NewGuid();
-            var provider = new FWPM_SUBLAYER0_
+            subLayerKey = guid,
+            displayData = new FWPM_DISPLAY_DATA0_
             {
-                subLayerKey = guid,
-                displayData = new FWPM_DISPLAY_DATA0_
-                {
-                    name = name,
-                    description = description,
-                },
-                providerKey = providerKeyPtr,
-                flags = 0,
-                weight = 0,
-            };
-            var result = NativeMethods.FwpmSubLayerAdd0(ptr, ref provider, IntPtr.Zero);
+                name = name,
+                description = description,
+            },
+            providerKey = providerKeyPtr,
+            flags = 0,
+            weight = 0,
+        };
+        NativeMethods.FwpmSubLayerAdd0(ptr, ref provider, IntPtr.Zero).EnsureResultIsNull();
 
-            EnsureResultIsNull(result);
-
-            return guid;
-        }
+        return guid;
     }
 
     public static IntPtrWrapper GetAppIdFromFileName(string fileName)
     {
-        var result = NativeMethods.FwpmGetAppIdFromFileName0(fileName, out var ptr);
-        EnsureResultIsNull(result);
-
+        NativeMethods.FwpmGetAppIdFromFileName0(fileName, out var ptr).EnsureResultIsNull();
+        
         return new IntPtrWrapper(ptr, FreeMemory);
     }
 
@@ -150,27 +134,23 @@ public static class WfpMethods
     public static Guid AddCallout(
         IntPtr ptr, Guid calloutKey, Guid providerKey, Guid applicableLayer, string name, string description)
     {
-        using (var providerKeyPtr = new StructurePtr<Guid>(providerKey))
+        using var providerKeyPtr = new StructurePtr<Guid>(providerKey);
+        var id = 0U;
+        var callout = new FWPM_CALLOUT0
         {
-            var id = 0U;
-            var callout = new FWPM_CALLOUT0
+            calloutKey = calloutKey,
+            providerKey = providerKeyPtr,
+            displayData = new FWPM_DISPLAY_DATA0_
             {
-                calloutKey = calloutKey,
-                providerKey = providerKeyPtr,
-                displayData = new FWPM_DISPLAY_DATA0_
-                {
-                    name = name,
-                    description = description,
-                },
-                applicableLayer = applicableLayer,
-                flags = NativeConstants.cFWPM_CALLOUT_FLAG_USES_PROVIDER_CONTEXT,
-            };
-            var result = NativeMethods.FwpmCalloutAdd0(ptr, ref callout, IntPtr.Zero, ref id);
+                name = name,
+                description = description,
+            },
+            applicableLayer = applicableLayer,
+            flags = NativeConstants.cFWPM_CALLOUT_FLAG_USES_PROVIDER_CONTEXT,
+        };
+        NativeMethods.FwpmCalloutAdd0(ptr, ref callout, IntPtr.Zero, ref id).EnsureResultIsNull();
 
-            EnsureResultIsNull(result);
-
-            return calloutKey;
-        }
+        return calloutKey;
     }
 
     public static Guid AllowSplitAppIds(
@@ -186,8 +166,8 @@ public static class WfpMethods
         string name,
         string description)
     {
-        using (var providerKeyPtr = new StructurePtr<Guid>(providerKey))
-        using (var conditionsPtr = new ArrayPtr<FWPM_FILTER_CONDITION0_>(appIds
+        using var providerKeyPtr = new StructurePtr<Guid>(providerKey);
+        using var conditionsPtr = new ArrayPtr<FWPM_FILTER_CONDITION0_>(appIds
             .Select(appId => new FWPM_FILTER_CONDITION0_
             {
                 fieldKey = NativeConstants.cFWPM_CONDITION_ALE_APP_ID,
@@ -203,48 +183,44 @@ public static class WfpMethods
                     }
                 }
             })
-            .ToArray()))
+            .ToArray());
+        var id = 0UL;
+        var guid = Guid.NewGuid();
+        var filter = new FWPM_FILTER0_
         {
-            var id = 0UL;
-            var guid = Guid.NewGuid();
-            var filter = new FWPM_FILTER0_
+            filterKey = guid,
+            providerKey = providerKeyPtr,
+            subLayerKey = subLayerKey,
+            weight = new FWP_VALUE0_
             {
-                filterKey = guid,
-                providerKey = providerKeyPtr,
-                subLayerKey = subLayerKey,
-                weight = new FWP_VALUE0_
+                type = FWP_DATA_TYPE_.FWP_UINT8,
+                Union1 = new FWP_VALUE0_Union
                 {
-                    type = FWP_DATA_TYPE_.FWP_UINT8,
-                    Union1 = new FWP_VALUE0_Union
-                    {
-                        uint8 = weight,
-                    }
-                },
-                numFilterConditions = (uint)appIds.Length,
-                filterCondition = conditionsPtr,
-                flags = NativeConstants.FWPM_FILTER_FLAG_HAS_PROVIDER_CONTEXT,
-                action = new FWPM_ACTION0_
+                    uint8 = weight,
+                }
+            },
+            numFilterConditions = (uint)appIds.Length,
+            filterCondition = conditionsPtr,
+            flags = NativeConstants.FWPM_FILTER_FLAG_HAS_PROVIDER_CONTEXT,
+            action = new FWPM_ACTION0_
+            {
+                type = FWP_ACTION_TYPE.FWP_ACTION_CALLOUT_UNKNOWN,
+                Union1 = new FWPM_ACTION0_Union
                 {
-                    type = FWP_ACTION_TYPE.FWP_ACTION_CALLOUT_UNKNOWN,
-                    Union1 = new FWPM_ACTION0_Union
-                    {
-                        filterType = actionFilterGuid,
-                    }
-                },
-                displayData = new FWPM_DISPLAY_DATA0_
-                {
-                    name = name,
-                    description = description,
-                },
-                providerContextKey = providerContextKey,
-                layerKey = layerKey,
-            };
-            var result = NativeMethods.FwpmFilterAdd0(engineHandle, ref filter, IntPtr.Zero, ref id);
+                    filterType = actionFilterGuid,
+                }
+            },
+            displayData = new FWPM_DISPLAY_DATA0_
+            {
+                name = name,
+                description = description,
+            },
+            providerContextKey = providerContextKey,
+            layerKey = layerKey,
+        };
+        NativeMethods.FwpmFilterAdd0(engineHandle, ref filter, IntPtr.Zero, ref id).EnsureResultIsNull();
 
-            EnsureResultIsNull(result);
-
-            return guid;
-        }
+        return guid;
     }
 
     public static Guid PermitAppId(
@@ -454,12 +430,11 @@ public static class WfpMethods
         string name,
         string description)
     {
-        using (var ifLuidPtr = new StructurePtr<ulong>(ifLuid))
-        {
-            return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
-                FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-                new[]
-                {
+        using var ifLuidPtr = new StructurePtr<ulong>(ifLuid);
+        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+            new[]
+            {
                     new FWPM_FILTER_CONDITION0_
                     {
                         fieldKey = NativeConstants.cFWPM_CONDITION_IP_LOCAL_INTERFACE,
@@ -473,8 +448,7 @@ public static class WfpMethods
                             }
                         }
                     },
-                });
-        }
+            });
     }
 
     public static Guid PermitSubNetworkV4(
@@ -489,15 +463,15 @@ public static class WfpMethods
         string name,
         string description)
     {
-        using (var networkPtr = new StructurePtr<FWP_V4_ADDR_AND_MASK>(new FWP_V4_ADDR_AND_MASK
+        using var networkPtr = new StructurePtr<FWP_V4_ADDR_AND_MASK>(new FWP_V4_ADDR_AND_MASK
         {
             addr = address.ToInteger(),
             mask = mask.ToInteger(),
-        }))
-        {
-            return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
-                FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-                new[]{
+        });
+
+        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+            new[]{
                         new FWPM_FILTER_CONDITION0_
                         {
                             fieldKey = isLocalAddress
@@ -513,8 +487,7 @@ public static class WfpMethods
                                 }
                             }
                         },
-                });
-        }
+            });
     }
 
     public static Guid PermitUdpPortV4(
@@ -599,46 +572,42 @@ public static class WfpMethods
         FWP_ACTION_TYPE actionType,
         FWPM_FILTER_CONDITION0_[]? conditions = null)
     {
-        using (var providerKeyPtr = new StructurePtr<Guid>(providerKey))
-        using (var conditionsPtr = new ArrayPtr<FWPM_FILTER_CONDITION0_>(conditions))
+        using var providerKeyPtr = new StructurePtr<Guid>(providerKey);
+        using var conditionsPtr = new ArrayPtr<FWPM_FILTER_CONDITION0_>(conditions);
+        var id = 0UL;
+        var guid = Guid.NewGuid();
+        var filter = new FWPM_FILTER0_
         {
-            var id = 0UL;
-            var guid = Guid.NewGuid();
-            var filter = new FWPM_FILTER0_
+            filterKey = guid,
+            providerKey = providerKeyPtr,
+            subLayerKey = subLayerKey,
+            weight = new FWP_VALUE0_
             {
-                filterKey = guid,
-                providerKey = providerKeyPtr,
-                subLayerKey = subLayerKey,
-                weight = new FWP_VALUE0_
+                type = FWP_DATA_TYPE_.FWP_UINT8,
+                Union1 = new FWP_VALUE0_Union
                 {
-                    type = FWP_DATA_TYPE_.FWP_UINT8,
-                    Union1 = new FWP_VALUE0_Union
-                    {
-                        uint8 = weight,
-                    }
-                },
-                numFilterConditions = (uint)(conditions?.Length ?? 0),
-                filterCondition = conditionsPtr,
-                action = new FWPM_ACTION0_
-                {
-                    type = actionType,
-                },
-                displayData = new FWPM_DISPLAY_DATA0_
-                {
-                    name = name,
-                    description = description,
-                },
-                layerKey = layerKey,
-            };
-            var result = NativeMethods.FwpmFilterAdd0(engineHandle, ref filter, IntPtr.Zero, ref id);
+                    uint8 = weight,
+                }
+            },
+            numFilterConditions = (uint)(conditions?.Length ?? 0),
+            filterCondition = conditionsPtr,
+            action = new FWPM_ACTION0_
+            {
+                type = actionType,
+            },
+            displayData = new FWPM_DISPLAY_DATA0_
+            {
+                name = name,
+                description = description,
+            },
+            layerKey = layerKey,
+        };
+        NativeMethods.FwpmFilterAdd0(engineHandle, ref filter, IntPtr.Zero, ref id).EnsureResultIsNull();
 
-            EnsureResultIsNull(result);
-
-            return guid;
-        }
+        return guid;
     }
 
-    public static void EnsureResultIsNull(uint result)
+    public static void EnsureResultIsNull(this uint result)
     {
         Marshal.ThrowExceptionForHR((int)result);
     }
