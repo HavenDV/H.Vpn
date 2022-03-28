@@ -1,4 +1,6 @@
-﻿namespace H.Firewall.Tests;
+﻿using System.Runtime.InteropServices;
+
+namespace H.Firewall.Tests;
 
 [TestClass]
 public class WfpTests
@@ -57,7 +59,7 @@ public class WfpTests
     [TestMethod]
     public void WfpSessionNotOpenRunTransactionTest()
     {
-        Assert.ThrowsException<InvalidOperationException>(() =>
+        Assert.ThrowsException<COMException>(() =>
         {
             using var firewall = new HFirewall();
             firewall.RunTransaction(ptr => { });

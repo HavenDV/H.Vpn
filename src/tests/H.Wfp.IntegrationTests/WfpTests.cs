@@ -1,6 +1,4 @@
-﻿using H.Wfp.Interop;
-
-namespace H.Wfp.Tests;
+﻿namespace H.Wfp.Tests;
 
 [TestClass]
 public class WfpTests
@@ -8,9 +6,7 @@ public class WfpTests
     [TestMethod]
     public void WfpSessionTest()
     {
-        using var session = new IntPtrWrapper(
-            WfpMethods.CreateWfpSession("H.Wfp", "H.Wfp dynamic session"),
-            WfpMethods.CloseWfpSession);
+        using var session = WfpMethods.CreateWfpSession("H.Wfp", "H.Wfp dynamic session");
 
         var providerGuid = WfpMethods.AddProvider(
             session,
@@ -22,5 +18,4 @@ public class WfpTests
             "H.Wfp filters",
             "Permissive and blocking filters");
     }
-
 }

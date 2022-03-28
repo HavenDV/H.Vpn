@@ -1,0 +1,13 @@
+﻿// Fwpuclnt
+FwpmEngineOpen0
+FwpmEngineClose0
+FwpmTransactionBegin0
+FwpmTransactionAbort0
+FwpmTransactionCommit0
+FwpmSubLayerAdd0
+FwpmProviderAdd0
+FwpmProviderContextAdd0
+FwpmCalloutAdd0
+FwpmFilterAdd0
+FwpmGetAppIdFromFileName0
+FwpmFreeMemory0

@@ -2,6 +2,7 @@
 using H.Wfp.Interop;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 
 namespace H.Firewall;
 
@@ -9,8 +10,8 @@ public class HFirewall : IDisposable
 {
     #region Properties
 
-    public IntPtrWrapper WfpSession { get; private set; } = new IntPtrWrapper();
-    public bool IsEnabled => !WfpSession.IsEmpty;
+    public SafeHandle WfpSession { get; private set; } = new SafeWfpSessionHandle();
+    public bool IsEnabled => !WfpSession.IsInvalid;
 
     #endregion
 
@@ -136,32 +137,28 @@ public class HFirewall : IDisposable
             applications);
     }
 
-    public void RunTransaction(Action<IntPtr> action)
+    public void RunTransaction(Action<SafeHandle> action)
     {
         action = action ?? throw new ArgumentNullException(nameof(action));
 
-        var ptr = (IntPtr)WfpSession;
-
-        WfpMethods.BeginTransaction(ptr);
+        WfpMethods.BeginTransaction(WfpSession);
 
         try
         {
-            action.Invoke(ptr);
+            action.Invoke(WfpSession);
         }
         catch
         {
-            WfpMethods.AbortTransaction(ptr);
+            WfpMethods.AbortTransaction(WfpSession);
             throw;
         }
 
-        WfpMethods.CommitTransaction(ptr);
+        WfpMethods.CommitTransaction(WfpSession);
     }
 
     public void Start()
     {
-        WfpSession = new IntPtrWrapper(
-            WfpMethods.CreateWfpSession("H.Wfp", "H.Wfp dynamic session"),
-            WfpMethods.CloseWfpSession);
+        WfpSession = WfpMethods.CreateWfpSession("H.Wfp", "H.Wfp dynamic session");
     }
 
     public void Stop()
@@ -272,7 +269,7 @@ public class HFirewall : IDisposable
 
     public void AllowSplitAppIds(
         Guid providerKey,
-        IntPtrWrapper[] appIds,
+        SafeFwpmHandle[] appIds,
         byte weight,
         Guid providerContextKey,
         bool reversed)
@@ -293,7 +290,7 @@ public class HFirewall : IDisposable
 
     public void EnableSplitAppId(
         Guid providerKey,
-        IntPtrWrapper appId,
+        SafeFwpmHandle appId,
         byte weight,
         Guid providerContextKey)
     {
@@ -303,7 +300,7 @@ public class HFirewall : IDisposable
     public void PermitAppId(
         Guid providerKey,
         Guid subLayerKey,
-        IntPtrWrapper appId,
+        SafeFwpmHandle appId,
         byte weight)
     {
         foreach (var pair in Layers)
@@ -535,7 +532,7 @@ public class HFirewall : IDisposable
         }
     }
 
-    public static IntPtrWrapper GetAppId(string fileName)
+    public static SafeFwpmHandle GetAppId(string fileName)
     {
         fileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
         if (!File.Exists(fileName))

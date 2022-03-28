@@ -7,158 +7,194 @@ namespace H.Wfp;
 
 public static class WfpMethods
 {
-    public static IntPtr CreateWfpSession(string name, string description)
+    public static unsafe SafeHandle CreateWfpSession(
+        string name,
+        string description)
     {
-        var session = new FWPM_SESSION0
+        fixed (char* namePtr = name)
+        fixed (char* descriptionPtr = description)
         {
-            displayData = new FWPM_DISPLAY_DATA0_
+            var session = new FWPM_SESSION0
             {
-                name = name,
-                description = description,
-            },
-            flags = NativeConstants.FWPM_SESSION_FLAG_DYNAMIC,
-            txnWaitTimeoutInMSec = NativeConstants.INFINITE,
-        };
+                displayData = new FWPM_DISPLAY_DATA0
+                {
+                    name = namePtr,
+                    description = descriptionPtr,
+                },
+                flags = NativeConstants.FWPM_SESSION_FLAG_DYNAMIC,
+                txnWaitTimeoutInMSec = NativeConstants.INFINITE,
+            };
 
-        NativeMethods.FwpmEngineOpen0(
-            null,
-            NativeConstants.RPC_C_AUTHN_WINNT,
-            IntPtr.Zero,
-            ref session,
-            out var ptr).EnsureResultIsNull();
+            HANDLE handle;
+            PInvoke.FwpmEngineOpen0(
+                serverName: default,
+                authnService: NativeConstants.RPC_C_AUTHN_WINNT,
+                authIdentity: null,
+                session: &session,
+                engineHandle: &handle).EnsureResultIsNull();
 
-        return ptr;
+            return new SafeWfpSessionHandle(handle, ownsHandle: true);
+        }
     }
 
-    public static void CloseWfpSession(IntPtr ptr)
+    public static void BeginTransaction(SafeHandle engineHandle)
     {
-        NativeMethods.FwpmEngineClose0(ptr).EnsureResultIsNull();
+        PInvoke.FwpmTransactionBegin0(engineHandle, 0).EnsureResultIsNull();
     }
 
-    public static void BeginTransaction(IntPtr ptr)
+    public static void CommitTransaction(SafeHandle engineHandle)
     {
-        NativeMethods.FwpmTransactionBegin0(ptr, 0).EnsureResultIsNull();
+        PInvoke.FwpmTransactionCommit0(engineHandle).EnsureResultIsNull();
     }
 
-    public static void CommitTransaction(IntPtr ptr)
+    public static void AbortTransaction(SafeHandle engineHandle)
     {
-        NativeMethods.FwpmTransactionCommit0(ptr).EnsureResultIsNull();
+        PInvoke.FwpmTransactionAbort0(engineHandle).EnsureResultIsNull();
     }
 
-    public static void AbortTransaction(IntPtr ptr)
+    public static unsafe Guid AddProviderContext(
+        SafeHandle engineHandle,
+        Guid providerKey,
+        string name,
+        string description,
+        IPAddress ipAddress)
     {
-        NativeMethods.FwpmTransactionAbort0(ptr).EnsureResultIsNull();
-    }
-
-    public static Guid AddProviderContext(IntPtr ptr, Guid providerKey, string name, string description, IPAddress ipAddress)
-    {
-        using var providerKeyPtr = new StructurePtr<Guid>(providerKey);
-        using var addressPtr = new BytesPtr(ipAddress.GetAddressBytes());
-        using var blobPtr = new StructurePtr<FWP_BYTE_BLOB_>(new FWP_BYTE_BLOB_
-        {
-            data = addressPtr,
-            size = 4,
-        });
         var id = 0UL;
         var guid = Guid.NewGuid();
-        var context = new FWPM_PROVIDER_CONTEXT0
+
+        fixed (char* namePtr = name)
+        fixed (char* descriptionPtr = description)
+        fixed (byte* addressPtr = ipAddress.GetAddressBytes())
         {
-            displayData = new FWPM_DISPLAY_DATA0_
+            var blob = new FWP_BYTE_BLOB
             {
-                name = name,
-                description = description,
-            },
-            type = FWPM_PROVIDER_CONTEXT_TYPE.FWPM_GENERAL_CONTEXT,
-            providerContextKey = guid,
-            union = new FWPM_PROVIDER_CONTEXT0_Union
+                data = addressPtr,
+                size = 4,
+            };
+            var context = new FWPM_PROVIDER_CONTEXT0
             {
-                dataBuffer = blobPtr,
-            },
-            providerKey = providerKeyPtr,
-        };
-        NativeMethods.FwpmProviderContextAdd0(ptr, ref context, IntPtr.Zero, ref id).EnsureResultIsNull();
+                displayData = new FWPM_DISPLAY_DATA0
+                {
+                    name = namePtr,
+                    description = descriptionPtr,
+                },
+                type = FWPM_PROVIDER_CONTEXT_TYPE.FWPM_GENERAL_CONTEXT,
+                providerContextKey = guid,
+                Anonymous = new FWPM_PROVIDER_CONTEXT0._Anonymous_e__Union
+                {
+                    dataBuffer = &blob,
+                },
+                providerKey = &providerKey,
+            };
+            PInvoke.FwpmProviderContextAdd0(
+                engineHandle: engineHandle,
+                providerContext: &context,
+                sd: null,
+                id: &id).EnsureResultIsNull();
+        }
 
         return guid;
     }
 
-    public static Guid AddProvider(IntPtr ptr, string name, string description)
+    public static unsafe Guid AddProvider(SafeHandle engineHandle, string name, string description)
     {
         var guid = Guid.NewGuid();
-        var provider = new FWPM_PROVIDER0
+
+        fixed (char* namePtr = name)
+        fixed (char* descriptionPtr = description)
         {
-            providerKey = guid,
-            displayData = new FWPM_DISPLAY_DATA0_
+            var provider = new FWPM_PROVIDER0
             {
-                name = name,
-                description = description,
-            },
-        };
-        NativeMethods.FwpmProviderAdd0(ptr, ref provider, IntPtr.Zero).EnsureResultIsNull();
+                providerKey = guid,
+                displayData = new FWPM_DISPLAY_DATA0
+                {
+                    name = namePtr,
+                    description = descriptionPtr,
+                },
+            };
+            PInvoke.FwpmProviderAdd0(
+                engineHandle,
+                &provider,
+                null).EnsureResultIsNull();
+        }
 
         return guid;
     }
 
-    public static Guid AddSubLayer(IntPtr ptr, Guid providerKey, string name, string description)
+    public static unsafe Guid AddSubLayer(SafeHandle engineHandle, Guid providerKey, string name, string description)
     {
-        using var providerKeyPtr = new StructurePtr<Guid>(providerKey);
         var guid = Guid.NewGuid();
-        var provider = new FWPM_SUBLAYER0_
+
+        fixed (char* namePtr = name)
+        fixed (char* descriptionPtr = description)
         {
-            subLayerKey = guid,
-            displayData = new FWPM_DISPLAY_DATA0_
+            var subLayer = new FWPM_SUBLAYER0
             {
-                name = name,
-                description = description,
-            },
-            providerKey = providerKeyPtr,
-            flags = 0,
-            weight = 0,
-        };
-        NativeMethods.FwpmSubLayerAdd0(ptr, ref provider, IntPtr.Zero).EnsureResultIsNull();
+                subLayerKey = guid,
+                displayData = new FWPM_DISPLAY_DATA0
+                {
+                    name = namePtr,
+                    description = descriptionPtr,
+                },
+                providerKey = &providerKey,
+                flags = 0,
+                weight = 0,
+            };
+            PInvoke.FwpmSubLayerAdd0(engineHandle, &subLayer, null).EnsureResultIsNull();
+        }
 
         return guid;
     }
 
-    public static IntPtrWrapper GetAppIdFromFileName(string fileName)
+    public static unsafe SafeFwpmHandle GetAppIdFromFileName(string fileName)
     {
-        NativeMethods.FwpmGetAppIdFromFileName0(fileName, out var ptr).EnsureResultIsNull();
+        var blobPtr = (FWP_BYTE_BLOB*)null;
+        PInvoke.FwpmGetAppIdFromFileName0(fileName, &blobPtr).EnsureResultIsNull();
         
-        return new IntPtrWrapper(ptr, FreeMemory);
+        return new SafeFwpmHandle((IntPtr)blobPtr, true);
     }
 
-    public static void FreeMemory(IntPtr ptr)
+    public static unsafe Guid AddCallout(
+        SafeHandle engineHandle,
+        Guid calloutKey,
+        Guid providerKey,
+        Guid applicableLayer,
+        string name,
+        string description)
     {
-        NativeMethods.FwpmFreeMemory0(ptr);
-    }
-
-    public static Guid AddCallout(
-        IntPtr ptr, Guid calloutKey, Guid providerKey, Guid applicableLayer, string name, string description)
-    {
-        using var providerKeyPtr = new StructurePtr<Guid>(providerKey);
         var id = 0U;
-        var callout = new FWPM_CALLOUT0
+
+        fixed (char* namePtr = name)
+        fixed (char* descriptionPtr = description)
         {
-            calloutKey = calloutKey,
-            providerKey = providerKeyPtr,
-            displayData = new FWPM_DISPLAY_DATA0_
+            var callout = new FWPM_CALLOUT0
             {
-                name = name,
-                description = description,
-            },
-            applicableLayer = applicableLayer,
-            flags = NativeConstants.cFWPM_CALLOUT_FLAG_USES_PROVIDER_CONTEXT,
-        };
-        NativeMethods.FwpmCalloutAdd0(ptr, ref callout, IntPtr.Zero, ref id).EnsureResultIsNull();
+                calloutKey = calloutKey,
+                providerKey = &providerKey,
+                displayData = new FWPM_DISPLAY_DATA0
+                {
+                    name = namePtr,
+                    description = descriptionPtr,
+                },
+                applicableLayer = applicableLayer,
+                flags = NativeConstants.cFWPM_CALLOUT_FLAG_USES_PROVIDER_CONTEXT,
+            };
+            PInvoke.FwpmCalloutAdd0(
+                engineHandle,
+                &callout,
+                null,
+                &id).EnsureResultIsNull();
+        }
 
         return calloutKey;
     }
 
-    public static Guid AllowSplitAppIds(
-        IntPtr engineHandle,
+    public static unsafe Guid AllowSplitAppIds(
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
-        IntPtrWrapper[] appIds,
+        SafeFwpmHandle[] appIds,
         byte weight,
         Guid providerContextKey,
         Guid actionFilterGuid,
@@ -166,69 +202,81 @@ public static class WfpMethods
         string name,
         string description)
     {
-        using var providerKeyPtr = new StructurePtr<Guid>(providerKey);
-        using var conditionsPtr = new ArrayPtr<FWPM_FILTER_CONDITION0_>(appIds
-            .Select(appId => new FWPM_FILTER_CONDITION0_
+        var conditions = appIds
+            .Select(appId => new FWPM_FILTER_CONDITION0
             {
                 fieldKey = NativeConstants.cFWPM_CONDITION_ALE_APP_ID,
                 matchType = reversed
-                    ? FWP_MATCH_TYPE_.FWP_MATCH_NOT_EQUAL
-                    : FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-                conditionValue = new FWP_CONDITION_VALUE0_
+                    ? FWP_MATCH_TYPE.FWP_MATCH_NOT_EQUAL
+                    : FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = new FWP_CONDITION_VALUE0
                 {
-                    type = FWP_DATA_TYPE_.FWP_BYTE_BLOB_TYPE,
-                    Union1 = new FWP_CONDITION_VALUE0_Union
+                    type = FWP_DATA_TYPE.FWP_BYTE_BLOB_TYPE,
+                    Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                     {
-                        byteBlob = appId.IntPtr,
+                        byteBlob = (FWP_BYTE_BLOB*)appId.DangerousGetHandle(),
                     }
                 }
             })
-            .ToArray());
+            .ToArray();
         var id = 0UL;
         var guid = Guid.NewGuid();
-        var filter = new FWPM_FILTER0_
+
+        fixed (char* namePtr = name)
+        fixed (char* descriptionPtr = description)
+        fixed (FWPM_FILTER_CONDITION0* conditionsPtr = conditions)
         {
-            filterKey = guid,
-            providerKey = providerKeyPtr,
-            subLayerKey = subLayerKey,
-            weight = new FWP_VALUE0_
+            var filter = new FWPM_FILTER0
             {
-                type = FWP_DATA_TYPE_.FWP_UINT8,
-                Union1 = new FWP_VALUE0_Union
+                filterKey = guid,
+                providerKey = &providerKey,
+                subLayerKey = subLayerKey,
+                weight = new FWP_VALUE0
                 {
-                    uint8 = weight,
-                }
-            },
-            numFilterConditions = (uint)appIds.Length,
-            filterCondition = conditionsPtr,
-            flags = NativeConstants.FWPM_FILTER_FLAG_HAS_PROVIDER_CONTEXT,
-            action = new FWPM_ACTION0_
-            {
-                type = FWP_ACTION_TYPE.FWP_ACTION_CALLOUT_UNKNOWN,
-                Union1 = new FWPM_ACTION0_Union
+                    type = FWP_DATA_TYPE.FWP_UINT8,
+                    Anonymous = new FWP_VALUE0._Anonymous_e__Union
+                    {
+                        uint8 = weight,
+                    }
+                },
+                numFilterConditions = (uint)appIds.Length,
+                filterCondition = conditionsPtr,
+                flags = FWPM_FILTER_FLAGS.FWPM_FILTER_FLAG_HAS_PROVIDER_CONTEXT,
+                action = new FWPM_ACTION0
                 {
-                    filterType = actionFilterGuid,
-                }
-            },
-            displayData = new FWPM_DISPLAY_DATA0_
-            {
-                name = name,
-                description = description,
-            },
-            providerContextKey = providerContextKey,
-            layerKey = layerKey,
-        };
-        NativeMethods.FwpmFilterAdd0(engineHandle, ref filter, IntPtr.Zero, ref id).EnsureResultIsNull();
+                    type = (uint)FWP_ACTION_TYPE.FWP_ACTION_CALLOUT_UNKNOWN,
+                    Anonymous = new FWPM_ACTION0._Anonymous_e__Union
+                    {
+                        filterType = actionFilterGuid,
+                    }
+                },
+                displayData = new FWPM_DISPLAY_DATA0
+                {
+                    name = namePtr,
+                    description = descriptionPtr,
+                },
+                Anonymous = new FWPM_FILTER0._Anonymous_e__Union
+                {
+                    providerContextKey = providerContextKey,
+                },
+                layerKey = layerKey,
+            };
+            PInvoke.FwpmFilterAdd0(
+                engineHandle,
+                &filter,
+                null,
+                &id).EnsureResultIsNull();
+        }
 
         return guid;
     }
 
-    public static Guid PermitAppId(
-        IntPtr engineHandle, 
+    public static unsafe Guid PermitAppId(
+        SafeHandle engineHandle,
         Guid providerKey, 
         Guid subLayerKey, 
         Guid layerKey,
-        IntPtrWrapper appId, 
+        SafeFwpmHandle appId, 
         byte weight, 
         string name, 
         string description)
@@ -236,16 +284,16 @@ public static class WfpMethods
         return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
-                new FWPM_FILTER_CONDITION0_
+                new FWPM_FILTER_CONDITION0
                 {
                     fieldKey = NativeConstants.cFWPM_CONDITION_ALE_APP_ID,
-                    matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0_
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
                     {
-                        type = FWP_DATA_TYPE_.FWP_BYTE_BLOB_TYPE,
-                        Union1 = new FWP_CONDITION_VALUE0_Union
+                        type = FWP_DATA_TYPE.FWP_BYTE_BLOB_TYPE,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
-                            byteBlob = appId.IntPtr,
+                            byteBlob = (FWP_BYTE_BLOB*)appId.DangerousGetHandle(),
                         }
                     }
                 },
@@ -253,7 +301,7 @@ public static class WfpMethods
     }
 
     public static Guid PermitLoopback(
-        IntPtr engineHandle,
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -264,14 +312,14 @@ public static class WfpMethods
         return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
-                new FWPM_FILTER_CONDITION0_
+                new FWPM_FILTER_CONDITION0
                 {
                     fieldKey = NativeConstants.FWPM_CONDITION_FLAGS,
-                    matchType = FWP_MATCH_TYPE_.FWP_MATCH_FLAGS_ALL_SET,
-                    conditionValue = new FWP_CONDITION_VALUE0_
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_FLAGS_ALL_SET,
+                    conditionValue = new FWP_CONDITION_VALUE0
                     {
-                        type = FWP_DATA_TYPE_.FWP_UINT32,
-                        Union1 = new FWP_CONDITION_VALUE0_Union
+                        type = FWP_DATA_TYPE.FWP_UINT32,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
                             uint32 = NativeConstants.cFWP_CONDITION_FLAG_IS_LOOPBACK,
                         }
@@ -281,7 +329,7 @@ public static class WfpMethods
     }
 
     public static Guid BlockAll(
-        IntPtr engineHandle,
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -293,41 +341,41 @@ public static class WfpMethods
             FWP_ACTION_TYPE.FWP_ACTION_BLOCK);
     }
 
-    public static FWPM_FILTER_CONDITION0_[] DnsConditions { get; } = {
-        new FWPM_FILTER_CONDITION0_
+    internal static FWPM_FILTER_CONDITION0[] DnsConditions { get; } = {
+        new FWPM_FILTER_CONDITION0
         {
             fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_PORT,
-            matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-            conditionValue = new FWP_CONDITION_VALUE0_
+            matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+            conditionValue = new FWP_CONDITION_VALUE0
             {
-                type = FWP_DATA_TYPE_.FWP_UINT16,
-                Union1 = new FWP_CONDITION_VALUE0_Union
+                type = FWP_DATA_TYPE.FWP_UINT16,
+                Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                 {
                     uint16 = 53, // DNS PORT
                 }
             }
         },
-        new FWPM_FILTER_CONDITION0_
+        new FWPM_FILTER_CONDITION0
         {
             fieldKey = NativeConstants.cFWPM_CONDITION_IP_PROTOCOL,
-            matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-            conditionValue = new FWP_CONDITION_VALUE0_
+            matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+            conditionValue = new FWP_CONDITION_VALUE0
             {
-                type = FWP_DATA_TYPE_.FWP_UINT8,
-                Union1 = new FWP_CONDITION_VALUE0_Union
+                type = FWP_DATA_TYPE.FWP_UINT8,
+                Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                 {
                     uint8 = (byte)WtIPProto.cIPPROTO_UDP,
                 }
             }
         },
-        new FWPM_FILTER_CONDITION0_
+        new FWPM_FILTER_CONDITION0
         {
             fieldKey = NativeConstants.cFWPM_CONDITION_IP_PROTOCOL,
-            matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-            conditionValue = new FWP_CONDITION_VALUE0_
+            matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+            conditionValue = new FWP_CONDITION_VALUE0
             {
-                type = FWP_DATA_TYPE_.FWP_UINT8,
-                Union1 = new FWP_CONDITION_VALUE0_Union
+                type = FWP_DATA_TYPE.FWP_UINT8,
+                Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                 {
                     uint8 = (byte)WtIPProto.cIPPROTO_TCP,
                 }
@@ -336,7 +384,7 @@ public static class WfpMethods
     };
 
     public static Guid BlockDns(
-        IntPtr engineHandle,
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -349,7 +397,7 @@ public static class WfpMethods
     }
 
     public static Guid AllowDnsV4(
-        IntPtr engineHandle,
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -361,14 +409,14 @@ public static class WfpMethods
         return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             DnsConditions
-                .Concat(addresses.Select(address => new FWPM_FILTER_CONDITION0_
+                .Concat(addresses.Select(address => new FWPM_FILTER_CONDITION0
                 {
                     fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_ADDRESS,
-                    matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0_
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
                     {
-                        type = FWP_DATA_TYPE_.FWP_UINT32,
-                        Union1 = new FWP_CONDITION_VALUE0_Union
+                        type = FWP_DATA_TYPE.FWP_UINT32,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
                             uint32 = address.ToInteger(),
                         }
@@ -377,8 +425,8 @@ public static class WfpMethods
                 .ToArray());
     }
 
-    public static Guid AllowDnsV6(
-        IntPtr engineHandle,
+    public static unsafe Guid AllowDnsV6(
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -388,40 +436,30 @@ public static class WfpMethods
         string description)
     {
         var ptrs = addresses
-            .Select(address => new BytesPtr(address.GetAddressBytes()))
+            .Select(address => address.ToArray16())
             .ToArray();
 
-        try
-        {
-            return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
-                FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-                DnsConditions
-                    .Concat(ptrs.Select(ptr => new FWPM_FILTER_CONDITION0_
+        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+            DnsConditions
+                .Concat(ptrs.Select(ptr => new FWPM_FILTER_CONDITION0
+                {
+                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_ADDRESS,
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
                     {
-                        fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_ADDRESS,
-                        matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-                        conditionValue = new FWP_CONDITION_VALUE0_
+                        type = FWP_DATA_TYPE.FWP_BYTE_ARRAY16_TYPE,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
-                            type = FWP_DATA_TYPE_.FWP_BYTE_ARRAY16_TYPE,
-                            Union1 = new FWP_CONDITION_VALUE0_Union
-                            {
-                                byteArray16 = ptr,
-                            }
+                            byteArray16 = &ptr,
                         }
-                    }))
-                    .ToArray());
-        }
-        finally
-        {
-            foreach (var ptr in ptrs)
-            {
-                ptr.Dispose();
-            }
-        }
+                    }
+                }))
+                .ToArray());
     }
 
-    public static Guid PermitNetworkInterface(
-        IntPtr engineHandle,
+    public static unsafe Guid PermitNetworkInterface(
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -430,29 +468,28 @@ public static class WfpMethods
         string name,
         string description)
     {
-        using var ifLuidPtr = new StructurePtr<ulong>(ifLuid);
         return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]
             {
-                    new FWPM_FILTER_CONDITION0_
+                new FWPM_FILTER_CONDITION0
+                {
+                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_LOCAL_INTERFACE,
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
                     {
-                        fieldKey = NativeConstants.cFWPM_CONDITION_IP_LOCAL_INTERFACE,
-                        matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-                        conditionValue = new FWP_CONDITION_VALUE0_
+                        type = FWP_DATA_TYPE.FWP_UINT64,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
-                            type = FWP_DATA_TYPE_.FWP_UINT64,
-                            Union1 = new FWP_CONDITION_VALUE0_Union
-                            {
-                                uint64 = ifLuidPtr,
-                            }
+                            uint64 = &ifLuid,
                         }
-                    },
+                    }
+                },
             });
     }
 
-    public static Guid PermitSubNetworkV4(
-        IntPtr engineHandle,
+    public static unsafe Guid PermitSubNetworkV4(
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -463,35 +500,35 @@ public static class WfpMethods
         string name,
         string description)
     {
-        using var networkPtr = new StructurePtr<FWP_V4_ADDR_AND_MASK>(new FWP_V4_ADDR_AND_MASK
+        var network = new FWP_V4_ADDR_AND_MASK
         {
             addr = address.ToInteger(),
             mask = mask.ToInteger(),
-        });
+        };
 
         return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
-                        new FWPM_FILTER_CONDITION0_
+                new FWPM_FILTER_CONDITION0
+                {
+                    fieldKey = isLocalAddress
+                        ? NativeConstants.cFWPM_CONDITION_IP_LOCAL_ADDRESS
+                        : NativeConstants.cFWPM_CONDITION_IP_REMOTE_ADDRESS,
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
+                    {
+                        type = FWP_DATA_TYPE.FWP_V4_ADDR_MASK,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
-                            fieldKey = isLocalAddress
-                                ? NativeConstants.cFWPM_CONDITION_IP_LOCAL_ADDRESS
-                                : NativeConstants.cFWPM_CONDITION_IP_REMOTE_ADDRESS,
-                            matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-                            conditionValue = new FWP_CONDITION_VALUE0_
-                            {
-                                type = FWP_DATA_TYPE_.FWP_V4_ADDR_MASK,
-                                Union1 = new FWP_CONDITION_VALUE0_Union
-                                {
-                                    v4AddrMask = networkPtr,
-                                }
-                            }
-                        },
+                            v4AddrMask = &network,
+                        }
+                    }
+                },
             });
     }
 
     public static Guid PermitUdpPortV4(
-        IntPtr engineHandle,
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -503,27 +540,27 @@ public static class WfpMethods
         return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
-                new FWPM_FILTER_CONDITION0_
+                new FWPM_FILTER_CONDITION0
                 {
                     fieldKey = NativeConstants.cFWPM_CONDITION_IP_PROTOCOL,
-                    matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0_
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
                     {
-                        type = FWP_DATA_TYPE_.FWP_UINT8,
-                        Union1 = new FWP_CONDITION_VALUE0_Union
+                        type = FWP_DATA_TYPE.FWP_UINT8,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
                             uint8 = (byte)WtIPProto.cIPPROTO_UDP,
                         }
                     }
                 },
-                new FWPM_FILTER_CONDITION0_
+                new FWPM_FILTER_CONDITION0
                 {
                     fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_PORT,
-                    matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0_
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
                     {
-                        type = FWP_DATA_TYPE_.FWP_UINT16,
-                        Union1 = new FWP_CONDITION_VALUE0_Union
+                        type = FWP_DATA_TYPE.FWP_UINT16,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
                             uint16 = port,
                         }
@@ -533,7 +570,7 @@ public static class WfpMethods
     }
 
     public static Guid PermitProtocolV4(
-        IntPtr engineHandle,
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -545,14 +582,14 @@ public static class WfpMethods
         return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description, 
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
-                new FWPM_FILTER_CONDITION0_
+                new FWPM_FILTER_CONDITION0
                 {
                     fieldKey = NativeConstants.cFWPM_CONDITION_IP_PROTOCOL,
-                    matchType = FWP_MATCH_TYPE_.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0_
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
                     {
-                        type = FWP_DATA_TYPE_.FWP_UINT8,
-                        Union1 = new FWP_CONDITION_VALUE0_Union
+                        type = FWP_DATA_TYPE.FWP_UINT8,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
                             uint8 = proto,
                         }
@@ -561,8 +598,8 @@ public static class WfpMethods
             });
     }
 
-    public static Guid AddFilter(
-        IntPtr engineHandle,
+    internal static unsafe Guid AddFilter(
+        SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -570,39 +607,47 @@ public static class WfpMethods
         string name,
         string description,
         FWP_ACTION_TYPE actionType,
-        FWPM_FILTER_CONDITION0_[]? conditions = null)
+        params FWPM_FILTER_CONDITION0[] conditions)
     {
-        using var providerKeyPtr = new StructurePtr<Guid>(providerKey);
-        using var conditionsPtr = new ArrayPtr<FWPM_FILTER_CONDITION0_>(conditions);
         var id = 0UL;
         var guid = Guid.NewGuid();
-        var filter = new FWPM_FILTER0_
+
+        fixed (char* namePtr = name)
+        fixed (char* descriptionPtr = description)
+        fixed (FWPM_FILTER_CONDITION0* conditionsPtr = conditions)
         {
-            filterKey = guid,
-            providerKey = providerKeyPtr,
-            subLayerKey = subLayerKey,
-            weight = new FWP_VALUE0_
+            var filter = new FWPM_FILTER0
             {
-                type = FWP_DATA_TYPE_.FWP_UINT8,
-                Union1 = new FWP_VALUE0_Union
+                filterKey = guid,
+                providerKey = &providerKey,
+                subLayerKey = subLayerKey,
+                weight = new FWP_VALUE0
                 {
-                    uint8 = weight,
-                }
-            },
-            numFilterConditions = (uint)(conditions?.Length ?? 0),
-            filterCondition = conditionsPtr,
-            action = new FWPM_ACTION0_
-            {
-                type = actionType,
-            },
-            displayData = new FWPM_DISPLAY_DATA0_
-            {
-                name = name,
-                description = description,
-            },
-            layerKey = layerKey,
-        };
-        NativeMethods.FwpmFilterAdd0(engineHandle, ref filter, IntPtr.Zero, ref id).EnsureResultIsNull();
+                    type = FWP_DATA_TYPE.FWP_UINT8,
+                    Anonymous = new FWP_VALUE0._Anonymous_e__Union
+                    {
+                        uint8 = weight,
+                    }
+                },
+                numFilterConditions = (uint)(conditions?.Length ?? 0),
+                filterCondition = conditionsPtr,
+                action = new FWPM_ACTION0
+                {
+                    type = (uint)actionType,
+                },
+                displayData = new FWPM_DISPLAY_DATA0
+                {
+                    name = namePtr,
+                    description = descriptionPtr,
+                },
+                layerKey = layerKey,
+            };
+            PInvoke.FwpmFilterAdd0(
+                engineHandle,
+                &filter,
+                null,
+                &id).EnsureResultIsNull();
+        }
 
         return guid;
     }
