@@ -39,17 +39,21 @@ public static class WfpMethods
 
     public static void BeginTransaction(SafeHandle engineHandle)
     {
-        PInvoke.FwpmTransactionBegin0(engineHandle, 0).EnsureResultIsNull();
+        PInvoke.FwpmTransactionBegin0(
+            engineHandle: engineHandle,
+            flags: 0).EnsureResultIsNull();
     }
 
     public static void CommitTransaction(SafeHandle engineHandle)
     {
-        PInvoke.FwpmTransactionCommit0(engineHandle).EnsureResultIsNull();
+        PInvoke.FwpmTransactionCommit0(
+            engineHandle: engineHandle).EnsureResultIsNull();
     }
 
     public static void AbortTransaction(SafeHandle engineHandle)
     {
-        PInvoke.FwpmTransactionAbort0(engineHandle).EnsureResultIsNull();
+        PInvoke.FwpmTransactionAbort0(
+            engineHandle: engineHandle).EnsureResultIsNull();
     }
 
     public static unsafe Guid AddProviderContext(
@@ -113,9 +117,9 @@ public static class WfpMethods
                 },
             };
             PInvoke.FwpmProviderAdd0(
-                engineHandle,
-                &provider,
-                null).EnsureResultIsNull();
+                engineHandle: engineHandle,
+                provider: &provider,
+                sd: null).EnsureResultIsNull();
         }
 
         return guid;
@@ -140,7 +144,10 @@ public static class WfpMethods
                 flags = 0,
                 weight = 0,
             };
-            PInvoke.FwpmSubLayerAdd0(engineHandle, &subLayer, null).EnsureResultIsNull();
+            PInvoke.FwpmSubLayerAdd0(
+                engineHandle: engineHandle,
+                subLayer: &subLayer,
+                sd: null).EnsureResultIsNull();
         }
 
         return guid;
@@ -149,7 +156,9 @@ public static class WfpMethods
     public static unsafe SafeFwpmHandle GetAppIdFromFileName(string fileName)
     {
         var blobPtr = (FWP_BYTE_BLOB*)null;
-        PInvoke.FwpmGetAppIdFromFileName0(fileName, &blobPtr).EnsureResultIsNull();
+        PInvoke.FwpmGetAppIdFromFileName0(
+            fileName: fileName,
+            appId: &blobPtr).EnsureResultIsNull();
         
         return new SafeFwpmHandle((IntPtr)blobPtr, true);
     }
@@ -180,10 +189,10 @@ public static class WfpMethods
                 flags = NativeConstants.cFWPM_CALLOUT_FLAG_USES_PROVIDER_CONTEXT,
             };
             PInvoke.FwpmCalloutAdd0(
-                engineHandle,
-                &callout,
-                null,
-                &id).EnsureResultIsNull();
+                engineHandle: engineHandle,
+                callout: &callout,
+                sd: null,
+                id: &id).EnsureResultIsNull();
         }
 
         return calloutKey;
@@ -262,10 +271,10 @@ public static class WfpMethods
                 layerKey = layerKey,
             };
             PInvoke.FwpmFilterAdd0(
-                engineHandle,
-                &filter,
-                null,
-                &id).EnsureResultIsNull();
+                engineHandle: engineHandle,
+                filter: &filter,
+                sd: null,
+                id: &id).EnsureResultIsNull();
         }
 
         return guid;
@@ -643,10 +652,10 @@ public static class WfpMethods
                 layerKey = layerKey,
             };
             PInvoke.FwpmFilterAdd0(
-                engineHandle,
-                &filter,
-                null,
-                &id).EnsureResultIsNull();
+                engineHandle: engineHandle,
+                filter: &filter,
+                sd: null,
+                id: &id).EnsureResultIsNull();
         }
 
         return guid;
