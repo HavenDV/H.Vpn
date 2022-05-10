@@ -17,7 +17,8 @@ A set of C# libraries for VPN implementation
 ## Usage
 ### H.Firewall
 Forbids for 15 seconds everything except LAN/DNS/Localhost requests and Chrome applications.  
-NOTE: The application that runs this must have administrator rights.  
+NOTE: To use this code in your application, you must either run it as an administrator or 
+run it through a service talking to it via IPC (eg [H.Pipes](https://github.com/HavenDV/H.Pipes)).
 Else you will get the following error: `0x8032000D. The call must be made from within an explicit transaction.`
 ```cs
 using var firewall = new HFirewall();
@@ -42,6 +43,9 @@ firewall.RunTransaction(ptr =>
 
 await Task.Delay(TimeSpan.FromSeconds(15));
 ```
+
+H.Firewall uses [WFP](https://docs.microsoft.com/en-us/windows/win32/fwp/windows-filtering-platform-start-page) calls internally, 
+you can learn more about this.
 
 ### Usage
 
