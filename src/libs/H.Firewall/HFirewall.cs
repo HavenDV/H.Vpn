@@ -67,75 +67,75 @@ public class HFirewall : IDisposable
         PermitLoopback(providerKey, subLayerKey, weight);
     }
 
-    public void EnableSplitTunnelingForSelectedApps(
-        Guid providerKey,
-        Guid subLayerKey,
-        byte weight,
-        IPAddress localIp,
-        IPAddress vpnIp,
-        bool reversed,
-        params string[] applications)
-    {
-        RegisterCallout(providerKey);
+    //public void EnableSplitTunnelingForSelectedApps(
+    //    Guid providerKey,
+    //    Guid subLayerKey,
+    //    byte weight,
+    //    IPAddress localIp,
+    //    IPAddress vpnIp,
+    //    bool reversed,
+    //    params string[] applications)
+    //{
+    //    RegisterCallout(providerKey);
 
-        var localProviderContextKey = RegisterProviderContext(
-            providerKey,
-            localIp);
-        AllowSplitApps(
-            providerKey,
-            subLayerKey,
-            applications,
-            weight,
-            localProviderContextKey,
-            !reversed);
+    //    var localProviderContextKey = RegisterProviderContext(
+    //        providerKey,
+    //        localIp);
+    //    AllowSplitApps(
+    //        providerKey,
+    //        subLayerKey,
+    //        applications,
+    //        weight,
+    //        localProviderContextKey,
+    //        !reversed);
 
-        var vpnProviderContextKey = RegisterProviderContext(
-            providerKey,
-            vpnIp);
-        AllowSplitApps(
-            providerKey,
-            subLayerKey,
-            applications,
-            weight,
-            vpnProviderContextKey,
-            reversed);
-    }
+    //    var vpnProviderContextKey = RegisterProviderContext(
+    //        providerKey,
+    //        vpnIp);
+    //    AllowSplitApps(
+    //        providerKey,
+    //        subLayerKey,
+    //        applications,
+    //        weight,
+    //        vpnProviderContextKey,
+    //        reversed);
+    //}
 
-    public void EnableSplitTunnelingOnlyForSelectedApps(
-        Guid providerKey,
-        Guid subLayerKey,
-        byte weight,
-        IPAddress localIp,
-        IPAddress vpnIp,
-        params string[] applications)
-    {
-        EnableSplitTunnelingForSelectedApps(
-            providerKey,
-            subLayerKey,
-            weight,
-            localIp,
-            vpnIp,
-            false,
-            applications);
-    }
+    //public void EnableSplitTunnelingOnlyForSelectedApps(
+    //    Guid providerKey,
+    //    Guid subLayerKey,
+    //    byte weight,
+    //    IPAddress localIp,
+    //    IPAddress vpnIp,
+    //    params string[] applications)
+    //{
+    //    EnableSplitTunnelingForSelectedApps(
+    //        providerKey,
+    //        subLayerKey,
+    //        weight,
+    //        localIp,
+    //        vpnIp,
+    //        false,
+    //        applications);
+    //}
 
-    public void EnableSplitTunnelingExcludeSelectedApps(
-        Guid providerKey,
-        Guid subLayerKey,
-        byte weight,
-        IPAddress localIp,
-        IPAddress vpnIp,
-        params string[] applications)
-    {
-        EnableSplitTunnelingForSelectedApps(
-            providerKey,
-            subLayerKey,
-            weight,
-            localIp,
-            vpnIp,
-            true,
-            applications);
-    }
+    //public void EnableSplitTunnelingExcludeSelectedApps(
+    //    Guid providerKey,
+    //    Guid subLayerKey,
+    //    byte weight,
+    //    IPAddress localIp,
+    //    IPAddress vpnIp,
+    //    params string[] applications)
+    //{
+    //    EnableSplitTunnelingForSelectedApps(
+    //        providerKey,
+    //        subLayerKey,
+    //        weight,
+    //        localIp,
+    //        vpnIp,
+    //        true,
+    //        applications);
+    //}
 
     public void RunTransaction(Action<SafeHandle> action)
     {
@@ -199,103 +199,103 @@ public class HFirewall : IDisposable
 
     // ReSharper disable once InconsistentNaming
     // ReSharper disable once UnusedMember.Local
-    private static Guid cHVPN_WFP_CALLOUT_V4 { get; } = new Guid(
-        0x2da40468, 0xb926, 0x4402,
-        0xb3, 0xf8, 0xcb, 0x4e, 0x91, 0x27, 0x01, 0x59);
+    //private static Guid cHVPN_WFP_CALLOUT_V4 { get; } = new Guid(
+    //    0x2da40468, 0xb926, 0x4402,
+    //    0xb3, 0xf8, 0xcb, 0x4e, 0x91, 0x27, 0x01, 0x59);
 
-    public void RegisterCallout(
-        Guid providerKey)
-    {
-        WfpMethods.AddCallout(
-            WfpSession,
-            cHVPN_WFP_CALLOUT_V4,
-            providerKey,
-            NativeConstants.cFWPM_LAYER_ALE_BIND_REDIRECT_V4,
-            "H.Wfp",
-            "Split tunneling callout (IPv4)");
-    }
+    //public void RegisterCallout(
+    //    Guid providerKey)
+    //{
+    //    WfpMethods.AddCallout(
+    //        WfpSession,
+    //        cHVPN_WFP_CALLOUT_V4,
+    //        providerKey,
+    //        NativeConstants.cFWPM_LAYER_ALE_BIND_REDIRECT_V4,
+    //        "H.Wfp",
+    //        "Split tunneling callout (IPv4)");
+    //}
 
-    public Guid RegisterProviderContext(
-        Guid providerKey,
-        IPAddress ipAddress)
-    {
-        return WfpMethods.AddProviderContext(
-            WfpSession,
-            providerKey,
-            "H.Wfp",
-            "Register provider context for split tunneling callout driver",
-            ipAddress);
-    }
+    //public Guid RegisterProviderContext(
+    //    Guid providerKey,
+    //    IPAddress ipAddress)
+    //{
+    //    return WfpMethods.AddProviderContext(
+    //        WfpSession,
+    //        providerKey,
+    //        "H.Wfp",
+    //        "Register provider context for split tunneling callout driver",
+    //        ipAddress);
+    //}
 
-    public void EnableSplitApp(
-        Guid providerKey,
-        Guid subLayerKey,
-        string appPath,
-        byte weight,
-        Guid providerContextKey)
-    {
-        AllowSplitApps(providerKey, subLayerKey, new[] { appPath }, weight, providerContextKey, false);
-    }
+    //public void EnableSplitApp(
+    //    Guid providerKey,
+    //    Guid subLayerKey,
+    //    string appPath,
+    //    byte weight,
+    //    Guid providerContextKey)
+    //{
+    //    AllowSplitApps(providerKey, subLayerKey, new[] { appPath }, weight, providerContextKey, false);
+    //}
 
-    public void AllowSplitApps(
-        Guid providerKey,
-        Guid subLayerKey,
-        ICollection<string> paths,
-        byte weight,
-        Guid providerContextKey,
-        bool reversed)
-    {
-        var appIds = paths
-            .Select(GetAppId)
-            .ToArray();
+    //public void AllowSplitApps(
+    //    Guid providerKey,
+    //    Guid subLayerKey,
+    //    ICollection<string> paths,
+    //    byte weight,
+    //    Guid providerContextKey,
+    //    bool reversed)
+    //{
+    //    var appIds = paths
+    //        .Select(GetAppId)
+    //        .ToArray();
 
-        try
-        {
-            foreach (var appId in appIds)
-            {
-                PermitAppId(providerKey, subLayerKey, appId, weight);
-            }
+    //    try
+    //    {
+    //        foreach (var appId in appIds)
+    //        {
+    //            PermitAppId(providerKey, subLayerKey, appId, weight);
+    //        }
 
-            AllowSplitAppIds(providerKey, appIds, weight, providerContextKey, reversed);
-        }
-        finally
-        {
-            foreach (var appId in appIds)
-            {
-                appId.Dispose();
-            }
-        }
-    }
+    //        AllowSplitAppIds(providerKey, appIds, weight, providerContextKey, reversed);
+    //    }
+    //    finally
+    //    {
+    //        foreach (var appId in appIds)
+    //        {
+    //            appId.Dispose();
+    //        }
+    //    }
+    //}
 
-    public void AllowSplitAppIds(
-        Guid providerKey,
-        SafeFwpmHandle[] appIds,
-        byte weight,
-        Guid providerContextKey,
-        bool reversed)
-    {
-        WfpMethods.AllowSplitAppIds(
-            WfpSession,
-            providerKey,
-            NativeConstants.cFWPM_SUBLAYER_UNIVERSAL,
-            NativeConstants.cFWPM_LAYER_ALE_BIND_REDIRECT_V4,
-            appIds,
-            weight,
-            providerContextKey,
-            cHVPN_WFP_CALLOUT_V4,
-            reversed,
-            "H.Wfp",
-            "Enable split tunneling using callout (IPv4)");
-    }
+    //public void AllowSplitAppIds(
+    //    Guid providerKey,
+    //    SafeFwpmHandle[] appIds,
+    //    byte weight,
+    //    Guid providerContextKey,
+    //    bool reversed)
+    //{
+    //    WfpMethods.AllowSplitAppIds(
+    //        WfpSession,
+    //        providerKey,
+    //        NativeConstants.cFWPM_SUBLAYER_UNIVERSAL,
+    //        NativeConstants.cFWPM_LAYER_ALE_BIND_REDIRECT_V4,
+    //        appIds,
+    //        weight,
+    //        providerContextKey,
+    //        cHVPN_WFP_CALLOUT_V4,
+    //        reversed,
+    //        "H.Wfp",
+    //        "Enable split tunneling using callout (IPv4)");
+    //}
 
-    public void EnableSplitAppId(
-        Guid providerKey,
-        SafeFwpmHandle appId,
-        byte weight,
-        Guid providerContextKey)
-    {
-        AllowSplitAppIds(providerKey, new[] { appId }, weight, providerContextKey, false);
-    }
+    //public void EnableSplitAppId(
+    //    Guid providerKey,
+    //    SafeFwpmHandle appId,
+    //    byte weight,
+    //    Guid providerContextKey)
+    //{
+    //    AllowSplitAppIds(providerKey, new[] { appId }, weight, providerContextKey, false);
+    //}
 
     public void PermitAppId(
         Guid providerKey,

@@ -196,25 +196,25 @@ public class HVpn : IDisposable
             {
                 case SplitTunnelingMode.AllowSelectedApps:
                     {
-                        Firewall.EnableSplitTunnelingOnlyForSelectedApps(
-                            providerKey,
-                            subLayerKey,
-                            8,
-                            IPAddress.Parse(settings.LocalIp),
-                            IPAddress.Parse(vpnIp),
-                            settings.SplitTunnelingApps.ToArray());
+                        //Firewall.EnableSplitTunnelingOnlyForSelectedApps(
+                        //    providerKey,
+                        //    subLayerKey,
+                        //    8,
+                        //    IPAddress.Parse(settings.LocalIp),
+                        //    IPAddress.Parse(vpnIp),
+                        //    settings.SplitTunnelingApps.ToArray());
                         break;
                     }
 
                 case SplitTunnelingMode.DisallowSelectedApps:
                     {
-                        Firewall.EnableSplitTunnelingExcludeSelectedApps(
-                            providerKey,
-                            subLayerKey,
-                            8,
-                            IPAddress.Parse(settings.LocalIp),
-                            IPAddress.Parse(vpnIp),
-                            settings.SplitTunnelingApps.ToArray());
+                        //Firewall.EnableSplitTunnelingExcludeSelectedApps(
+                        //    providerKey,
+                        //    subLayerKey,
+                        //    8,
+                        //    IPAddress.Parse(settings.LocalIp),
+                        //    IPAddress.Parse(vpnIp),
+                        //    settings.SplitTunnelingApps.ToArray());
                         break;
                     }
             }
