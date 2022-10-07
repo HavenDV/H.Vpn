@@ -488,6 +488,30 @@ public class HFirewall : IDisposable
         PermitSubNetworkV4(providerKey, subLayerKey, weight, network.Network, network.Netmask, false);
     }
 
+    public void PermitTcpPortV4(
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        ushort port)
+    {
+        foreach (var pair in new Dictionary<string, Guid>
+        {
+            { "IPv4 inbound", NativeConstants.FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4 },
+            { "IPv4 established", NativeConstants.FWPM_LAYER_ALE_FLOW_ESTABLISHED_V4 },
+        })
+        {
+            WfpMethods.PermitTcpPortV4(
+                WfpSession,
+                providerKey,
+                subLayerKey,
+                pair.Value,
+                weight,
+                port,
+                "H.Wfp",
+                $"Permit traffic on TCP port ({pair.Key})");
+        }
+    }
+
     public void PermitUdpPortV4(
         Guid providerKey,
         Guid subLayerKey,

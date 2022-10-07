@@ -536,6 +536,48 @@ public static class WfpMethods
             });
     }
 
+    public static Guid PermitTcpPortV4(
+        SafeHandle engineHandle,
+        Guid providerKey,
+        Guid subLayerKey,
+        Guid layerKey,
+        byte weight,
+        ushort port,
+        string name,
+        string description)
+    {
+        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+            new[]{
+                new FWPM_FILTER_CONDITION0
+                {
+                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_PROTOCOL,
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
+                    {
+                        type = FWP_DATA_TYPE.FWP_UINT8,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
+                        {
+                            uint8 = (byte)WtIPProto.cIPPROTO_TCP,
+                        }
+                    }
+                },
+                new FWPM_FILTER_CONDITION0
+                {
+                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_PORT,
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
+                    {
+                        type = FWP_DATA_TYPE.FWP_UINT16,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
+                        {
+                            uint16 = port,
+                        }
+                    }
+                },
+            });
+    }
+
     public static Guid PermitUdpPortV4(
         SafeHandle engineHandle,
         Guid providerKey,
