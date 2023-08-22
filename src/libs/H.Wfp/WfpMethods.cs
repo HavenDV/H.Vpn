@@ -1,11 +1,13 @@
 ﻿using System.Net;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using Windows.Win32.Security;
 using H.Wfp.Extensions;
 using H.Wfp.Interop;
 
 namespace H.Wfp;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public static class WfpMethods
 {
     public static unsafe SafeHandle CreateWfpSession(

@@ -1,4 +1,6 @@
-﻿namespace H.OpenVpn;
+﻿using System.Globalization;
+
+namespace H.OpenVpn;
 
 public class State
 {
@@ -11,7 +13,7 @@ public class State
         var values = line.Split(',');
 
         return new State(
-            new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(int.Parse(values[0])),
+            new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(int.Parse(values[0], CultureInfo.InvariantCulture)),
             values[1].Trim(' '),
             values[2].Trim(' '),
             values[3].Trim(' '),

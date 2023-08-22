@@ -1,8 +1,10 @@
-﻿using System.Security;
+﻿using System.Runtime.Versioning;
+using System.Security;
 
 namespace H.Wfp.Interop;
 
 [SecurityCritical]
+[SupportedOSPlatform("windows6.0.6000")]
 public sealed class SafeWfpSessionHandle : SafeHandleZeroOrMinusOneIsInvalid
 {
     public SafeWfpSessionHandle()

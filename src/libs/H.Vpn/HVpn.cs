@@ -3,9 +3,11 @@ using H.IpHlpApi;
 using H.OpenVpn;
 using System.Net;
 using System.Reflection;
+using System.Runtime.Versioning;
 
 namespace H.Vpn;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public class HVpn : IDisposable
 {
     #region Properties
@@ -395,7 +397,7 @@ Time: {state.Time:T}");
 
     public static Version GetVersion()
     {
-        return Assembly.GetExecutingAssembly().GetName().Version;
+        return Assembly.GetExecutingAssembly().GetName().Version ?? new Version();
     }
 
     public void Stop()

@@ -3,9 +3,11 @@ using H.Wfp.Interop;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace H.Firewall;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public class HFirewall : IDisposable
 {
     #region Properties

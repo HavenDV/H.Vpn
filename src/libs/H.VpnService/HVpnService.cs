@@ -1,9 +1,11 @@
-﻿using H.Firewall;
+﻿using System.Runtime.Versioning;
+using H.Firewall;
 using H.Vpn;
 using H.VpnService.Models;
 
 namespace H.VpnService
 {
+    [SupportedOSPlatform("windows6.0.6000")]
     public class HVpnService : IAsyncDisposable
     {
         #region Properties

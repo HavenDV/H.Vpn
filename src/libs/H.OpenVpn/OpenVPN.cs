@@ -1,5 +1,6 @@
 ﻿using H.OpenVpn.Utilities;
 using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -257,7 +258,7 @@ public class HOpenVpn : IDisposable
                 var match = regExpPattern.Match(message);
                 if (match.Success)
                 {
-                    return long.Parse(match.Groups[1].Value);
+                    return long.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
                 }
 
                 return 0;
@@ -465,7 +466,7 @@ public class HOpenVpn : IDisposable
                     break;
                 }
 
-                if (line.StartsWith(">PASSWORD:Need 'Auth' username/password"))
+                if (line.StartsWith(">PASSWORD:Need 'Auth' username/password", StringComparison.Ordinal))
                 {
                     await WriteLineToManagementAsync($"username \"Auth\" {username}").ConfigureAwait(false);
                     await ReadLineFromManagementAsync().ConfigureAwait(false);
@@ -477,31 +478,31 @@ public class HOpenVpn : IDisposable
                     continue;
                 }
 
-                if (line.StartsWith(">PASSWORD:Auth-Token"))
+                if (line.StartsWith(">PASSWORD:Auth-Token", StringComparison.Ordinal))
                 {
                     continue;
                 }
 
-                if (line.StartsWith(">INFO:"))
+                if (line.StartsWith(">INFO:", StringComparison.Ordinal))
                 {
                     // ignore all INFO response
                     continue;
                 }
 
-                if (line.StartsWith(">BYTECOUNT:"))
+                if (line.StartsWith(">BYTECOUNT:", StringComparison.Ordinal))
                 {
                     // split the string without prefix ">BYTECOUNT:"
                     var nums = line.Substring(11).Split(',');
 
                     if (nums.Length > 1)
                     {
-                        BytesInCount = long.Parse(nums[0]);
-                        BytesOutCount = long.Parse(nums[1]);
+                        BytesInCount = long.Parse(nums[0], CultureInfo.InvariantCulture);
+                        BytesOutCount = long.Parse(nums[1], CultureInfo.InvariantCulture);
                     }
                     continue;
                 }
 
-                if (line.StartsWith(">STATE:"))
+                if (line.StartsWith(">STATE:", StringComparison.Ordinal))
                 {
                     var state = State.Parse(line.Substring(7));
                     switch (state.Name)
@@ -536,7 +537,7 @@ public class HOpenVpn : IDisposable
                     continue;
                 }
 
-                if (line.StartsWith(">LOG:"))
+                if (line.StartsWith(">LOG:", StringComparison.Ordinal))
                 {
                     // string without prefix ">LOG:"
                     OnLogObtained(line.Substring(5));

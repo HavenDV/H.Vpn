@@ -1,6 +1,4 @@
-﻿using System.IO.Pipes;
-using System.Security.AccessControl;
-using System.Security.Principal;
+﻿using System.Runtime.Versioning;
 using H.Pipes;
 using H.Pipes.AccessControl;
 using Newtonsoft.Json;
@@ -8,6 +6,7 @@ using H.VpnService.Models;
 
 namespace H.VpnService;
 
+[SupportedOSPlatform("windows")]
 public class IpcServer : IAsyncDisposable
 {
     #region Properties
@@ -118,11 +117,7 @@ public class IpcServer : IAsyncDisposable
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        PipeServer.AddAccessRules(
-            new PipeAccessRule(
-                new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null),
-                PipeAccessRights.ReadWrite,
-                AccessControlType.Allow));
+        PipeServer.AllowUsersReadWrite();
 
         PipeServer.ExceptionOccurred += (_, args) => OnExceptionOccurred(args.Exception);
         PipeServer.ClientConnected += (_, args) => OnClientConnected("Pipe client connected");
