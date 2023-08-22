@@ -8,7 +8,7 @@ using H.VpnService.Models;
 
 namespace H.VpnService;
 
-public class IpcServer : IDisposable
+public class IpcServer : IAsyncDisposable
 {
     #region Properties
 
@@ -244,22 +244,15 @@ public class IpcServer : IDisposable
         }, cancellationToken).ConfigureAwait(false);
     }
 
-    public void Stop()
+    public async ValueTask StopAsync()
     {
-        Dispose();
+        await DisposeAsync().ConfigureAwait(false);
     }
 
-    protected virtual void Dispose(bool disposing)
+    public async ValueTask DisposeAsync()
     {
-        if (disposing)
-        {
-            PipeServer.Dispose();
-        }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
+        await PipeServer.DisposeAsync().ConfigureAwait(false);
+        
         GC.SuppressFinalize(this);
     }
 

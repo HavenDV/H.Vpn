@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Runtime.InteropServices;
+using Windows.Win32.Security;
 using H.Wfp.Extensions;
 using H.Wfp.Interop;
 
@@ -92,8 +93,8 @@ public static class WfpMethods
             };
             PInvoke.FwpmProviderContextAdd0(
                 engineHandle: engineHandle,
-                providerContext: &context,
-                sd: null,
+                providerContext: in context,
+                sd: new PSECURITY_DESCRIPTOR(),
                 id: &id).EnsureResultIsNull();
         }
 
@@ -118,8 +119,8 @@ public static class WfpMethods
             };
             PInvoke.FwpmProviderAdd0(
                 engineHandle: engineHandle,
-                provider: &provider,
-                sd: null).EnsureResultIsNull();
+                provider: in provider,
+                sd: new PSECURITY_DESCRIPTOR()).EnsureResultIsNull();
         }
 
         return guid;
@@ -146,8 +147,8 @@ public static class WfpMethods
             };
             PInvoke.FwpmSubLayerAdd0(
                 engineHandle: engineHandle,
-                subLayer: &subLayer,
-                sd: null).EnsureResultIsNull();
+                subLayer: in subLayer,
+                sd: new PSECURITY_DESCRIPTOR()).EnsureResultIsNull();
         }
 
         return guid;
@@ -156,9 +157,12 @@ public static class WfpMethods
     public static unsafe SafeFwpmHandle GetAppIdFromFileName(string fileName)
     {
         var blobPtr = (FWP_BYTE_BLOB*)null;
-        PInvoke.FwpmGetAppIdFromFileName0(
-            fileName: fileName,
-            appId: &blobPtr).EnsureResultIsNull();
+        fixed (char* fileNamePtr = fileName)
+        {
+            PInvoke.FwpmGetAppIdFromFileName0(
+                fileName: fileNamePtr,
+                appId: &blobPtr).EnsureResultIsNull();
+        }
         
         return new SafeFwpmHandle((IntPtr)blobPtr, true);
     }
@@ -190,8 +194,8 @@ public static class WfpMethods
             };
             PInvoke.FwpmCalloutAdd0(
                 engineHandle: engineHandle,
-                callout: &callout,
-                sd: null,
+                callout: in callout,
+                sd: new PSECURITY_DESCRIPTOR(),
                 id: &id).EnsureResultIsNull();
         }
 
@@ -272,8 +276,8 @@ public static class WfpMethods
             };
             PInvoke.FwpmFilterAdd0(
                 engineHandle: engineHandle,
-                filter: &filter,
-                sd: null,
+                filter: in filter,
+                sd: new PSECURITY_DESCRIPTOR(),
                 id: &id).EnsureResultIsNull();
         }
 
@@ -434,38 +438,38 @@ public static class WfpMethods
                 .ToArray());
     }
 
-    public static unsafe Guid AllowDnsV6(
-        SafeHandle engineHandle,
-        Guid providerKey,
-        Guid subLayerKey,
-        Guid layerKey,
-        byte weight,
-        IEnumerable<IPAddress> addresses,
-        string name,
-        string description)
-    {
-        var ptrs = addresses
-            .Select(address => address.ToArray16())
-            .ToArray();
-
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-            DnsConditions
-                .Concat(ptrs.Select(ptr => new FWPM_FILTER_CONDITION0
-                {
-                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_ADDRESS,
-                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0
-                    {
-                        type = FWP_DATA_TYPE.FWP_BYTE_ARRAY16_TYPE,
-                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-                        {
-                            byteArray16 = &ptr,
-                        }
-                    }
-                }))
-                .ToArray());
-    }
+    // public static unsafe Guid AllowDnsV6(
+    //     SafeHandle engineHandle,
+    //     Guid providerKey,
+    //     Guid subLayerKey,
+    //     Guid layerKey,
+    //     byte weight,
+    //     IEnumerable<IPAddress> addresses,
+    //     string name,
+    //     string description)
+    // {
+    //     var ptrs = addresses
+    //         .Select(address => address.ToArray16())
+    //         .ToArray();
+    //
+    //     return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+    //         FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+    //         DnsConditions
+    //             .Concat(ptrs.Select(ptr => new FWPM_FILTER_CONDITION0
+    //             {
+    //                 fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_ADDRESS,
+    //                 matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+    //                 conditionValue = new FWP_CONDITION_VALUE0
+    //                 {
+    //                     type = FWP_DATA_TYPE.FWP_BYTE_ARRAY16_TYPE,
+    //                     Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
+    //                     {
+    //                         byteArray16 = &ptr,
+    //                     }
+    //                 }
+    //             }))
+    //             .ToArray());
+    // }
 
     public static unsafe Guid PermitNetworkInterface(
         SafeHandle engineHandle,
@@ -695,8 +699,8 @@ public static class WfpMethods
             };
             PInvoke.FwpmFilterAdd0(
                 engineHandle: engineHandle,
-                filter: &filter,
-                sd: null,
+                filter: in filter,
+                sd: new PSECURITY_DESCRIPTOR(),
                 id: &id).EnsureResultIsNull();
         }
 

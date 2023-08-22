@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net4.5.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net4.6.2;net6.0;net7.0</TargetFrameworks>
     <NoWarn>$(NoWarn)</NoWarn>
   </PropertyGroup>
 
@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="IPNetwork2" Version="2.5.402" />
+    <PackageReference Include="IPNetwork2" Version="2.6.605" />
   </ItemGroup>
 
   <ItemGroup>

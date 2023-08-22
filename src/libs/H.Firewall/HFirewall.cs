@@ -408,18 +408,18 @@ public class HFirewall : IDisposable
                 $"Allow DNS ({pair.Key})");
         }
 
-        foreach (var pair in V6Layers)
-        {
-            WfpMethods.AllowDnsV6(
-                WfpSession,
-                providerKey,
-                subLayerKey,
-                pair.Value,
-                weightDeny,
-                addresses.Where(address => address.AddressFamily == AddressFamily.InterNetworkV6),
-                "H.Wfp",
-                $"Allow DNS ({pair.Key})");
-        }
+        // foreach (var pair in V6Layers)
+        // {
+        //     WfpMethods.AllowDnsV6(
+        //         WfpSession,
+        //         providerKey,
+        //         subLayerKey,
+        //         pair.Value,
+        //         weightDeny,
+        //         addresses.Where(address => address.AddressFamily == AddressFamily.InterNetworkV6),
+        //         "H.Wfp",
+        //         $"Allow DNS ({pair.Key})");
+        // }
     }
 
     public void PermitNetworkInterface(
