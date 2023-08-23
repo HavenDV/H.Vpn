@@ -1,11 +1,13 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using H.Wfp;
 using H.Wfp.Interop;
 
 namespace H.Firewall;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public static class SessionExtensions
 {
     private static IReadOnlyDictionary<string, Guid> V4Layers { get; } = new Dictionary<string, Guid>
