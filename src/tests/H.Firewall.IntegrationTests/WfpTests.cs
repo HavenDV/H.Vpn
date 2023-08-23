@@ -41,6 +41,22 @@ public class WfpTests
     }
 
     [TestMethod]
+    public async Task AllowOnlyChromeLanDnsAndLocalhostTestBuilder()
+    {
+        using var firewall = new FirewallBuilder()
+            .Block()
+            .All()
+            .Allow()
+            .Localhost()
+            .DomainNameSystem()
+            .LocalAreaNetwork()
+            .Application(@"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe")
+            .Build();
+
+        await Task.Delay(TimeSpan.FromSeconds(15));
+    }
+
+    [TestMethod]
     public void GetAppIdFromFileNameTest()
     {
         using (SessionExtensions.GetAppId(@"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe"))
