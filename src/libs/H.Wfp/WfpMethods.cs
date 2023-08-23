@@ -306,21 +306,18 @@ public static class WfpMethods
         string description)
     {
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-            new[]{
-                new FWPM_FILTER_CONDITION0
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT, new FWPM_FILTER_CONDITION0
+            {
+                fieldKey = PInvoke.FWPM_CONDITION_ALE_APP_ID,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = new FWP_CONDITION_VALUE0
                 {
-                    fieldKey = PInvoke.FWPM_CONDITION_ALE_APP_ID,
-                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0
+                    type = FWP_DATA_TYPE.FWP_BYTE_BLOB_TYPE,
+                    Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                     {
-                        type = FWP_DATA_TYPE.FWP_BYTE_BLOB_TYPE,
-                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-                        {
-                            byteBlob = (FWP_BYTE_BLOB*)appId.DangerousGetHandle(),
-                        }
+                        byteBlob = (FWP_BYTE_BLOB*)appId.DangerousGetHandle(),
                     }
-                },
+                }
             });
     }
 
@@ -372,21 +369,18 @@ public static class WfpMethods
         string description)
     {
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-            new[]{
-                new FWPM_FILTER_CONDITION0
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT, new FWPM_FILTER_CONDITION0
+            {
+                fieldKey = PInvoke.FWPM_CONDITION_FLAGS,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_FLAGS_ALL_SET,
+                conditionValue = new FWP_CONDITION_VALUE0
                 {
-                    fieldKey = PInvoke.FWPM_CONDITION_FLAGS,
-                    matchType = FWP_MATCH_TYPE.FWP_MATCH_FLAGS_ALL_SET,
-                    conditionValue = new FWP_CONDITION_VALUE0
+                    type = FWP_DATA_TYPE.FWP_UINT32,
+                    Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                     {
-                        type = FWP_DATA_TYPE.FWP_UINT32,
-                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-                        {
-                            uint32 = PInvoke.FWP_CONDITION_FLAG_IS_LOOPBACK,
-                        }
+                        uint32 = PInvoke.FWP_CONDITION_FLAG_IS_LOOPBACK,
                     }
-                },
+                }
             });
     }
 
@@ -561,22 +555,18 @@ public static class WfpMethods
         string description)
     {
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-            new[]
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT, new FWPM_FILTER_CONDITION0
             {
-                new FWPM_FILTER_CONDITION0
+                fieldKey = PInvoke.FWPM_CONDITION_IP_LOCAL_INTERFACE,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = new FWP_CONDITION_VALUE0
                 {
-                    fieldKey = PInvoke.FWPM_CONDITION_IP_LOCAL_INTERFACE,
-                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0
+                    type = FWP_DATA_TYPE.FWP_UINT64,
+                    Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                     {
-                        type = FWP_DATA_TYPE.FWP_UINT64,
-                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-                        {
-                            uint64 = &ifLuid,
-                        }
+                        uint64 = &ifLuid,
                     }
-                },
+                }
             });
     }
 
@@ -599,23 +589,20 @@ public static class WfpMethods
         };
 
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-            new[]{
-                new FWPM_FILTER_CONDITION0
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT, new FWPM_FILTER_CONDITION0
+            {
+                fieldKey = isLocalAddress
+                    ? PInvoke.FWPM_CONDITION_IP_LOCAL_ADDRESS
+                    : PInvoke.FWPM_CONDITION_IP_REMOTE_ADDRESS,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = new FWP_CONDITION_VALUE0
                 {
-                    fieldKey = isLocalAddress
-                        ? PInvoke.FWPM_CONDITION_IP_LOCAL_ADDRESS
-                        : PInvoke.FWPM_CONDITION_IP_REMOTE_ADDRESS,
-                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0
+                    type = FWP_DATA_TYPE.FWP_V4_ADDR_MASK,
+                    Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                     {
-                        type = FWP_DATA_TYPE.FWP_V4_ADDR_MASK,
-                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-                        {
-                            v4AddrMask = &network,
-                        }
+                        v4AddrMask = &network,
                     }
-                },
+                }
             });
     }
 
@@ -630,34 +617,30 @@ public static class WfpMethods
         string description)
     {
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-            new[]{
-                new FWPM_FILTER_CONDITION0
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT, new FWPM_FILTER_CONDITION0
+            {
+                fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = new FWP_CONDITION_VALUE0
                 {
-                    fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
-                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0
+                    type = FWP_DATA_TYPE.FWP_UINT8,
+                    Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                     {
-                        type = FWP_DATA_TYPE.FWP_UINT8,
-                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-                        {
-                            uint8 = (byte)IPPROTO.IPPROTO_TCP,
-                        }
+                        uint8 = (byte)IPPROTO.IPPROTO_TCP,
                     }
-                },
-                new FWPM_FILTER_CONDITION0
+                }
+            }, new FWPM_FILTER_CONDITION0
+            {
+                fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = new FWP_CONDITION_VALUE0
                 {
-                    fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT,
-                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0
+                    type = FWP_DATA_TYPE.FWP_UINT16,
+                    Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                     {
-                        type = FWP_DATA_TYPE.FWP_UINT16,
-                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-                        {
-                            uint16 = port,
-                        }
+                        uint16 = port,
                     }
-                },
+                }
             });
     }
 
@@ -672,34 +655,30 @@ public static class WfpMethods
         string description)
     {
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-            new[]{
-                new FWPM_FILTER_CONDITION0
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT, new FWPM_FILTER_CONDITION0
+            {
+                fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = new FWP_CONDITION_VALUE0
                 {
-                    fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
-                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0
+                    type = FWP_DATA_TYPE.FWP_UINT8,
+                    Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                     {
-                        type = FWP_DATA_TYPE.FWP_UINT8,
-                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-                        {
-                            uint8 = (byte)IPPROTO.IPPROTO_UDP,
-                        }
+                        uint8 = (byte)IPPROTO.IPPROTO_UDP,
                     }
-                },
-                new FWPM_FILTER_CONDITION0
+                }
+            }, new FWPM_FILTER_CONDITION0
+            {
+                fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = new FWP_CONDITION_VALUE0
                 {
-                    fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT,
-                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0
+                    type = FWP_DATA_TYPE.FWP_UINT16,
+                    Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                     {
-                        type = FWP_DATA_TYPE.FWP_UINT16,
-                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-                        {
-                            uint16 = port,
-                        }
+                        uint16 = port,
                     }
-                },
+                }
             });
     }
 
@@ -714,21 +693,18 @@ public static class WfpMethods
         string description)
     {
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description, 
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
-            new[]{
-                new FWPM_FILTER_CONDITION0
+            FWP_ACTION_TYPE.FWP_ACTION_PERMIT, new FWPM_FILTER_CONDITION0
+            {
+                fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = new FWP_CONDITION_VALUE0
                 {
-                    fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
-                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                    conditionValue = new FWP_CONDITION_VALUE0
+                    type = FWP_DATA_TYPE.FWP_UINT8,
+                    Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                     {
-                        type = FWP_DATA_TYPE.FWP_UINT8,
-                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-                        {
-                            uint8 = proto,
-                        }
+                        uint8 = proto,
                     }
-                },
+                }
             });
     }
 
@@ -763,7 +739,7 @@ public static class WfpMethods
                         uint8 = weight,
                     }
                 },
-                numFilterConditions = (uint)(conditions?.Length ?? 0),
+                numFilterConditions = (uint)conditions.Length,
                 filterCondition = conditionsPtr,
                 action = new FWPM_ACTION0
                 {
