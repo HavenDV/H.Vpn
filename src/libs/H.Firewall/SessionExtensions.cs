@@ -10,23 +10,6 @@ namespace H.Firewall;
 [SupportedOSPlatform("windows6.0.6000")]
 public static class SessionExtensions
 {
-    private static IReadOnlyDictionary<string, Guid> V4Layers { get; } = new Dictionary<string, Guid>
-    {
-        { "IPv4 outbound", NativeConstants.FWPM_LAYER_ALE_AUTH_CONNECT_V4 },
-        { "IPv4 inbound", NativeConstants.FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4 },
-    };
-
-    private static IReadOnlyDictionary<string, Guid> V6Layers { get; } = new Dictionary<string, Guid>
-    {
-        { "IPv6 outbound", NativeConstants.FWPM_LAYER_ALE_AUTH_CONNECT_V6 },
-        { "IPv6 inbound", NativeConstants.cFWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V6 },
-    };
-
-    private static IReadOnlyDictionary<string, Guid> Layers => V4Layers
-        .Concat(V6Layers)
-        .ToDictionary(pair => pair.Key, pair => pair.Value);
-    
-
     public static (Guid providerGuid, Guid subLayerGuid) RegisterKeys(this SafeHandle handle)
     {
         var providerGuid = handle.AddProvider("H.Wfp",
@@ -45,7 +28,7 @@ public static class SessionExtensions
         SafeFwpmHandle appId,
         byte weight)
     {
-        foreach (var pair in Layers)
+        foreach (var pair in Layers.All)
         {
             handle.PermitAppId(
                 providerKey,
@@ -101,7 +84,7 @@ public static class SessionExtensions
             throw new ArgumentException("The allow weight must be greater than the deny weight");
         }
 
-        foreach (var pair in Layers)
+        foreach (var pair in Layers.All)
         {
             handle.BlockDns(providerKey,
                 subLayerKey,
@@ -111,7 +94,7 @@ public static class SessionExtensions
                 $"Block DNS ({pair.Key})");
         }
 
-        foreach (var pair in V4Layers)
+        foreach (var pair in Layers.V4)
         {
             handle.AllowDnsV4(providerKey,
                 subLayerKey,
@@ -122,7 +105,7 @@ public static class SessionExtensions
                 $"Allow DNS ({pair.Key})");
         }
 
-        // foreach (var pair in V6Layers)
+        // foreach (var pair in Layers.V6)
         // {
         //     handle.AllowDnsV6(
         //         providerKey,
@@ -142,7 +125,7 @@ public static class SessionExtensions
         byte weight,
         ulong ifLuid)
     {
-        foreach (var pair in Layers)
+        foreach (var pair in Layers.All)
         {
             handle.PermitNetworkInterface(providerKey,
                 subLayerKey,
@@ -163,7 +146,7 @@ public static class SessionExtensions
         IPAddress mask,
         bool isLocalAddress)
     {
-        foreach (var pair in V4Layers)
+        foreach (var pair in Layers.V4)
         {
             handle.PermitSubNetworkV4(providerKey,
                 subLayerKey,
@@ -208,11 +191,7 @@ public static class SessionExtensions
         byte weight,
         ushort port)
     {
-        foreach (var pair in new Dictionary<string, Guid>
-                 {
-                     { "IPv4 inbound", NativeConstants.FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4 },
-                     { "IPv4 established", NativeConstants.FWPM_LAYER_ALE_FLOW_ESTABLISHED_V4 },
-                 })
+        foreach (var pair in Layers.V4Port)
         {
             handle.PermitTcpPortV4(providerKey,
                 subLayerKey,
@@ -231,11 +210,7 @@ public static class SessionExtensions
         byte weight,
         ushort port)
     {
-        foreach (var pair in new Dictionary<string, Guid>
-                 {
-                     { "IPv4 inbound", NativeConstants.FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4 },
-                     { "IPv4 established", NativeConstants.FWPM_LAYER_ALE_FLOW_ESTABLISHED_V4 },
-                 })
+        foreach (var pair in Layers.V4Port)
         {
             handle.PermitUdpPortV4(providerKey,
                 subLayerKey,
@@ -252,15 +227,15 @@ public static class SessionExtensions
         Guid providerKey,
         Guid subLayerKey,
         byte weight,
-        WtIPProto proto)
+        byte proto)
     {
-        foreach (var pair in V4Layers)
+        foreach (var pair in Layers.V4)
         {
             handle.PermitProtocolV4(providerKey,
                 subLayerKey,
                 pair.Value,
                 weight,
-                (byte)proto,
+                proto,
                 "H.Wfp",
                 $"Permit traffic for protocol ({pair.Key})");
         }
@@ -372,7 +347,7 @@ public static class SessionExtensions
         Guid subLayerKey,
         byte weight)
     {
-        foreach (var pair in Layers)
+        foreach (var pair in Layers.All)
         {
             handle.PermitLoopback(providerKey,
                 subLayerKey,
@@ -389,7 +364,7 @@ public static class SessionExtensions
         Guid subLayerKey,
         byte weight)
     {
-        foreach (var pair in Layers)
+        foreach (var pair in Layers.All)
         {
             handle.BlockAll(providerKey,
                 subLayerKey,
@@ -436,6 +411,8 @@ public static class SessionExtensions
         handle.PermitDns(providerKey, subLayerKey, weightAllow, weightDeny, dnsServers);
     }
 
+    private const byte cIPPROTO_IPinIP = 4;
+    
     public static void PermitIKEv2(
         this SafeHandle handle,
         Guid providerKey,
@@ -443,7 +420,7 @@ public static class SessionExtensions
         byte weight)
     {
         handle.PermitLocalSubNetworkV4(providerKey, subLayerKey, weight, IPNetwork.Parse("10.0.0.0/8"));
-        handle.PermitProtocolV4(providerKey, subLayerKey, weight, WtIPProto.cIPPROTO_IPinIP);
+        handle.PermitProtocolV4(providerKey, subLayerKey, weight, cIPPROTO_IPinIP);
     }
 
     public static void PermitLocalhost(

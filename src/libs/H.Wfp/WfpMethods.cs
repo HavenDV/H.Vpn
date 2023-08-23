@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text;
+using Windows.Win32.Networking.WinSock;
 using Windows.Win32.Security;
 using H.Wfp.Extensions;
 using H.Wfp.Interop;
@@ -24,14 +26,14 @@ public static class WfpMethods
                     name = namePtr,
                     description = descriptionPtr,
                 },
-                flags = NativeConstants.FWPM_SESSION_FLAG_DYNAMIC,
-                txnWaitTimeoutInMSec = NativeConstants.INFINITE,
+                flags = PInvoke.FWPM_SESSION_FLAG_DYNAMIC,
+                txnWaitTimeoutInMSec = PInvoke.INFINITE,
             };
 
             HANDLE handle;
             PInvoke.FwpmEngineOpen0(
                 serverName: default,
-                authnService: NativeConstants.RPC_C_AUTHN_WINNT,
+                authnService: PInvoke.RPC_C_AUTHN_WINNT,
                 authIdentity: null,
                 session: &session,
                 engineHandle: &handle).EnsureResultIsNull();
@@ -199,7 +201,7 @@ public static class WfpMethods
                     description = descriptionPtr,
                 },
                 applicableLayer = applicableLayer,
-                flags = NativeConstants.cFWPM_CALLOUT_FLAG_USES_PROVIDER_CONTEXT,
+                flags = PInvoke.FWPM_CALLOUT_FLAG_USES_PROVIDER_CONTEXT,
             };
             PInvoke.FwpmCalloutAdd0(
                 engineHandle: engineHandle,
@@ -227,7 +229,7 @@ public static class WfpMethods
         var conditions = appIds
             .Select(appId => new FWPM_FILTER_CONDITION0
             {
-                fieldKey = NativeConstants.cFWPM_CONDITION_ALE_APP_ID,
+                fieldKey = PInvoke.FWPM_CONDITION_ALE_APP_ID,
                 matchType = reversed
                     ? FWP_MATCH_TYPE.FWP_MATCH_NOT_EQUAL
                     : FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
@@ -308,7 +310,7 @@ public static class WfpMethods
             new[]{
                 new FWPM_FILTER_CONDITION0
                 {
-                    fieldKey = NativeConstants.cFWPM_CONDITION_ALE_APP_ID,
+                    fieldKey = PInvoke.FWPM_CONDITION_ALE_APP_ID,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
                     conditionValue = new FWP_CONDITION_VALUE0
                     {
@@ -336,14 +338,14 @@ public static class WfpMethods
             new[]{
                 new FWPM_FILTER_CONDITION0
                 {
-                    fieldKey = NativeConstants.FWPM_CONDITION_FLAGS,
+                    fieldKey = PInvoke.FWPM_CONDITION_FLAGS,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_FLAGS_ALL_SET,
                     conditionValue = new FWP_CONDITION_VALUE0
                     {
                         type = FWP_DATA_TYPE.FWP_UINT32,
                         Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
-                            uint32 = NativeConstants.cFWP_CONDITION_FLAG_IS_LOOPBACK,
+                            uint32 = PInvoke.FWP_CONDITION_FLAG_IS_LOOPBACK,
                         }
                     }
                 },
@@ -366,7 +368,7 @@ public static class WfpMethods
     internal static FWPM_FILTER_CONDITION0[] DnsConditions { get; } = {
         new FWPM_FILTER_CONDITION0
         {
-            fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_PORT,
+            fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT,
             matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
             conditionValue = new FWP_CONDITION_VALUE0
             {
@@ -379,27 +381,27 @@ public static class WfpMethods
         },
         new FWPM_FILTER_CONDITION0
         {
-            fieldKey = NativeConstants.cFWPM_CONDITION_IP_PROTOCOL,
+            fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
             matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
             conditionValue = new FWP_CONDITION_VALUE0
             {
                 type = FWP_DATA_TYPE.FWP_UINT8,
                 Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                 {
-                    uint8 = (byte)WtIPProto.cIPPROTO_UDP,
+                    uint8 = (byte)IPPROTO.IPPROTO_UDP,
                 }
             }
         },
         new FWPM_FILTER_CONDITION0
         {
-            fieldKey = NativeConstants.cFWPM_CONDITION_IP_PROTOCOL,
+            fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
             matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
             conditionValue = new FWP_CONDITION_VALUE0
             {
                 type = FWP_DATA_TYPE.FWP_UINT8,
                 Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                 {
-                    uint8 = (byte)WtIPProto.cIPPROTO_TCP,
+                    uint8 = (byte)IPPROTO.IPPROTO_TCP,
                 }
             }
         },
@@ -433,7 +435,7 @@ public static class WfpMethods
             DnsConditions
                 .Concat(addresses.Select(address => new FWPM_FILTER_CONDITION0
                 {
-                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_ADDRESS,
+                    fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_ADDRESS,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
                     conditionValue = new FWP_CONDITION_VALUE0
                     {
@@ -496,7 +498,7 @@ public static class WfpMethods
             {
                 new FWPM_FILTER_CONDITION0
                 {
-                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_LOCAL_INTERFACE,
+                    fieldKey = PInvoke.FWPM_CONDITION_IP_LOCAL_INTERFACE,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
                     conditionValue = new FWP_CONDITION_VALUE0
                     {
@@ -534,8 +536,8 @@ public static class WfpMethods
                 new FWPM_FILTER_CONDITION0
                 {
                     fieldKey = isLocalAddress
-                        ? NativeConstants.cFWPM_CONDITION_IP_LOCAL_ADDRESS
-                        : NativeConstants.cFWPM_CONDITION_IP_REMOTE_ADDRESS,
+                        ? PInvoke.FWPM_CONDITION_IP_LOCAL_ADDRESS
+                        : PInvoke.FWPM_CONDITION_IP_REMOTE_ADDRESS,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
                     conditionValue = new FWP_CONDITION_VALUE0
                     {
@@ -564,20 +566,20 @@ public static class WfpMethods
             new[]{
                 new FWPM_FILTER_CONDITION0
                 {
-                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_PROTOCOL,
+                    fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
                     conditionValue = new FWP_CONDITION_VALUE0
                     {
                         type = FWP_DATA_TYPE.FWP_UINT8,
                         Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
-                            uint8 = (byte)WtIPProto.cIPPROTO_TCP,
+                            uint8 = (byte)IPPROTO.IPPROTO_TCP,
                         }
                     }
                 },
                 new FWPM_FILTER_CONDITION0
                 {
-                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_PORT,
+                    fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
                     conditionValue = new FWP_CONDITION_VALUE0
                     {
@@ -606,20 +608,20 @@ public static class WfpMethods
             new[]{
                 new FWPM_FILTER_CONDITION0
                 {
-                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_PROTOCOL,
+                    fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
                     conditionValue = new FWP_CONDITION_VALUE0
                     {
                         type = FWP_DATA_TYPE.FWP_UINT8,
                         Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
                         {
-                            uint8 = (byte)WtIPProto.cIPPROTO_UDP,
+                            uint8 = (byte)IPPROTO.IPPROTO_UDP,
                         }
                     }
                 },
                 new FWPM_FILTER_CONDITION0
                 {
-                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_REMOTE_PORT,
+                    fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
                     conditionValue = new FWP_CONDITION_VALUE0
                     {
@@ -648,7 +650,7 @@ public static class WfpMethods
             new[]{
                 new FWPM_FILTER_CONDITION0
                 {
-                    fieldKey = NativeConstants.cFWPM_CONDITION_IP_PROTOCOL,
+                    fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
                     conditionValue = new FWP_CONDITION_VALUE0
                     {
