@@ -40,27 +40,27 @@ public static class WfpMethods
         }
     }
 
-    public static void BeginTransaction(SafeHandle engineHandle)
+    public static void BeginTransaction(this SafeHandle engineHandle)
     {
         PInvoke.FwpmTransactionBegin0(
             engineHandle: engineHandle,
             flags: 0).EnsureResultIsNull();
     }
 
-    public static void CommitTransaction(SafeHandle engineHandle)
+    public static void CommitTransaction(this SafeHandle engineHandle)
     {
         PInvoke.FwpmTransactionCommit0(
             engineHandle: engineHandle).EnsureResultIsNull();
     }
 
-    public static void AbortTransaction(SafeHandle engineHandle)
+    public static void AbortTransaction(this SafeHandle engineHandle)
     {
         PInvoke.FwpmTransactionAbort0(
             engineHandle: engineHandle).EnsureResultIsNull();
     }
 
     public static unsafe Guid AddProviderContext(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         string name,
         string description,
@@ -103,7 +103,10 @@ public static class WfpMethods
         return guid;
     }
 
-    public static unsafe Guid AddProvider(SafeHandle engineHandle, string name, string description)
+    public static unsafe Guid AddProvider(
+        this SafeHandle engineHandle,
+        string name,
+        string description)
     {
         var guid = Guid.NewGuid();
 
@@ -128,7 +131,11 @@ public static class WfpMethods
         return guid;
     }
 
-    public static unsafe Guid AddSubLayer(SafeHandle engineHandle, Guid providerKey, string name, string description)
+    public static unsafe Guid AddSubLayer(
+        this SafeHandle engineHandle,
+        Guid providerKey,
+        string name,
+        string description)
     {
         var guid = Guid.NewGuid();
 
@@ -170,7 +177,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid AddCallout(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid calloutKey,
         Guid providerKey,
         Guid applicableLayer,
@@ -205,7 +212,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid AllowSplitAppIds(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -287,7 +294,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid PermitAppId(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey, 
         Guid subLayerKey, 
         Guid layerKey,
@@ -316,7 +323,7 @@ public static class WfpMethods
     }
 
     public static Guid PermitLoopback(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -344,7 +351,7 @@ public static class WfpMethods
     }
 
     public static Guid BlockAll(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -399,7 +406,7 @@ public static class WfpMethods
     };
 
     public static Guid BlockDns(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -412,7 +419,7 @@ public static class WfpMethods
     }
 
     public static Guid AllowDnsV4(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -441,7 +448,7 @@ public static class WfpMethods
     }
 
     // public static unsafe Guid AllowDnsV6(
-    //     SafeHandle engineHandle,
+    //     this SafeHandle engineHandle,
     //     Guid providerKey,
     //     Guid subLayerKey,
     //     Guid layerKey,
@@ -474,7 +481,7 @@ public static class WfpMethods
     // }
 
     public static unsafe Guid PermitNetworkInterface(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -504,7 +511,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid PermitSubNetworkV4(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -543,7 +550,7 @@ public static class WfpMethods
     }
 
     public static Guid PermitTcpPortV4(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -585,7 +592,7 @@ public static class WfpMethods
     }
 
     public static Guid PermitUdpPortV4(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -627,7 +634,7 @@ public static class WfpMethods
     }
 
     public static Guid PermitProtocolV4(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -656,7 +663,7 @@ public static class WfpMethods
     }
 
     internal static unsafe Guid AddFilter(
-        SafeHandle engineHandle,
+        this SafeHandle engineHandle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,

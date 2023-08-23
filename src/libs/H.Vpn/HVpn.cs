@@ -162,36 +162,36 @@ public class HVpn : IDisposable
     public void StartFirewall(FirewallSettings settings, string vpnIp)
     {
         Firewall.Start();
-        Firewall.RunTransaction(ptr =>
+        Firewall.RunTransaction(handle =>
         {
-            var (providerKey, subLayerKey) = Firewall.RegisterKeys();
+            var (providerKey, subLayerKey) = handle.RegisterKeys();
             if (settings.EnableKillSwitch)
             {
                 // H.Wfp-Service.exe
-                Firewall.PermitAppId(providerKey, subLayerKey, GetServiceProcessPath(), 15);
+                handle.PermitAppId(providerKey, subLayerKey, GetServiceProcessPath(), 15);
                 // OpenVPN.exe
-                Firewall.PermitAppId(providerKey, subLayerKey, GetOpenVpnPath(), 14);
+                handle.PermitAppId(providerKey, subLayerKey, GetOpenVpnPath(), 14);
 
                 // H.Wfp.exe
 #if DEBUG
-                Firewall.PermitAppId(providerKey, subLayerKey, @"C:\Program Files\H.Wfp\H.Wfp.exe", 13);
+                handle.PermitAppId(providerKey, subLayerKey, @"C:\Program Files\H.Wfp\H.Wfp.exe", 13);
 #else
-                Firewall.PermitAppId(providerKey, subLayerKey, GetGuiProcessPath(), 13);
+                handle.PermitAppId(providerKey, subLayerKey, GetGuiProcessPath(), 13);
 #endif
 
                 if (settings.AllowLan)
                 {
-                    Firewall.PermitLan(providerKey, subLayerKey, 12);
+                    handle.PermitLan(providerKey, subLayerKey, 12);
                 }
 
-                Firewall.PermitDns(providerKey, subLayerKey, 11, 10, settings.PrimaryDns, settings.SecondaryDns);
-                Firewall.PermitIKEv2(providerKey, subLayerKey, 9);
+                handle.PermitDns(providerKey, subLayerKey, 11, 10, settings.PrimaryDns, settings.SecondaryDns);
+                handle.PermitIKEv2(providerKey, subLayerKey, 9);
                 // Permit Tap Adapter
-                Firewall.PermitNetworkInterface(providerKey, subLayerKey, 2, NetworkMethods.FindTapAdapterLuid());
-                Firewall.PermitLocalhost(providerKey, subLayerKey, 1);
+                handle.PermitNetworkInterface(providerKey, subLayerKey, 2, NetworkMethods.FindTapAdapterLuid());
+                handle.PermitLocalhost(providerKey, subLayerKey, 1);
 
                 // Block everything not allowed explicitly
-                Firewall.BlockAll(providerKey, subLayerKey, 0);
+                handle.BlockAll(providerKey, subLayerKey, 0);
             }
 
             switch (settings.SplitTunnelingMode)

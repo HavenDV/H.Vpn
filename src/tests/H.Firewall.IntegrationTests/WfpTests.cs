@@ -2,8 +2,6 @@
 
 namespace H.Firewall.Tests;
 
-// ReSharper disable AccessToDisposedClosure
-
 [TestClass]
 public class WfpTests
 {
@@ -13,7 +11,7 @@ public class WfpTests
         using var firewall = new HFirewall();
 
         firewall.Start();
-        _ = firewall.RegisterKeys();
+        _ = firewall.WfpSession.RegisterKeys();
     }
 
     [TestMethod]
@@ -22,21 +20,21 @@ public class WfpTests
         using var firewall = new HFirewall();
 
         firewall.Start();
-        firewall.RunTransaction(_ =>
+        firewall.RunTransaction(handle =>
         {
-            var (providerKey, subLayerKey) = firewall.RegisterKeys();
-            firewall.PermitAppId(
+            var (providerKey, subLayerKey) = handle.RegisterKeys();
+            handle.PermitAppId(
                 providerKey,
                 subLayerKey,
                 @"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe",
                 15);
 
-            firewall.PermitLan(providerKey, subLayerKey, 12);
-            firewall.PermitDns(providerKey, subLayerKey, 11, 10);
-            firewall.PermitLocalhost(providerKey, subLayerKey, 1);
+            handle.PermitLan(providerKey, subLayerKey, 12);
+            handle.PermitDns(providerKey, subLayerKey, 11, 10);
+            handle.PermitLocalhost(providerKey, subLayerKey, 1);
 
             // Block everything not allowed explicitly
-            firewall.BlockAll(providerKey, subLayerKey, 0);
+            handle.BlockAll(providerKey, subLayerKey, 0);
         });
 
         await Task.Delay(TimeSpan.FromSeconds(15));
@@ -45,7 +43,7 @@ public class WfpTests
     [TestMethod]
     public void GetAppIdFromFileNameTest()
     {
-        using (HFirewall.GetAppId(@"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe"))
+        using (SessionExtensions.GetAppId(@"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe"))
         {
         }
     }
@@ -64,7 +62,7 @@ public class WfpTests
         Assert.ThrowsException<COMException>(() =>
         {
             using var firewall = new HFirewall();
-            firewall.RunTransaction(ptr => { });
+            firewall.RunTransaction(_ => { });
         });
     }
 }
