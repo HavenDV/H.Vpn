@@ -91,6 +91,53 @@ public static class SessionExtensions
         return WfpMethods.GetAppIdFromFileName(fileName);
     }
     
+    public static void BlockUri(
+        this SafeHandle handle,
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        Uri uri)
+    {
+        uri = uri ?? throw new ArgumentNullException(nameof(uri));
+        
+        var addresses = Dns.GetHostAddresses(uri.Host);
+        
+        handle.BlockIpAddresses(providerKey, subLayerKey, weight, addresses);
+    }
+    
+    public static void BlockIpAddresses(
+        this SafeHandle handle,
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        IReadOnlyCollection<IPAddress> addresses)
+    {
+        foreach (var pair in Layers.V4)
+        {
+            handle.AddDnsV4(
+                FWP_ACTION_TYPE.FWP_ACTION_BLOCK,
+                providerKey,
+                subLayerKey,
+                pair.Value,
+                weight,
+                addresses.Where(address => address.AddressFamily == AddressFamily.InterNetwork),
+                "H.Wfp",
+                $"Block DNS ({pair.Key})");
+        }
+
+        // foreach (var pair in Layers.V6)
+        // {
+        //     handle.BlockDnsV6(
+        //         providerKey,
+        //         subLayerKey,
+        //         pair.Value,
+        //         weight,
+        //         addresses.Where(address => address.AddressFamily == AddressFamily.InterNetworkV6),
+        //         "H.Wfp",
+        //         $"Block DNS ({pair.Key})");
+        // }
+    }
+    
     public static void PermitDns(
         this SafeHandle handle,
         Guid providerKey,
@@ -116,7 +163,9 @@ public static class SessionExtensions
 
         foreach (var pair in Layers.V4)
         {
-            handle.AllowDnsV4(providerKey,
+            handle.AddDnsV4(
+                FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+                providerKey,
                 subLayerKey,
                 pair.Value,
                 weightAllow,

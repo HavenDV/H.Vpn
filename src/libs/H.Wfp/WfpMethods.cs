@@ -458,8 +458,9 @@ public static class WfpMethods
             FWP_ACTION_TYPE.FWP_ACTION_BLOCK, DnsConditions);
     }
 
-    public static Guid AllowDnsV4(
+    public static Guid AddDnsV4(
         this SafeHandle engineHandle,
+        FWP_ACTION_TYPE action,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -469,7 +470,7 @@ public static class WfpMethods
         string description)
     {
         return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+            action,
             DnsConditions
                 .Concat(addresses.Select(address => new FWPM_FILTER_CONDITION0
                 {
