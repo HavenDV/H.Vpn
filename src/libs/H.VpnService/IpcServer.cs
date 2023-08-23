@@ -4,6 +4,8 @@ using H.Pipes.AccessControl;
 using Newtonsoft.Json;
 using H.VpnService.Models;
 
+#pragma warning disable CS8604 // Possible null reference argument.
+
 namespace H.VpnService;
 
 [SupportedOSPlatform("windows")]

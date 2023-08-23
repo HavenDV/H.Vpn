@@ -2,6 +2,8 @@
 
 namespace H.Firewall.Tests;
 
+// ReSharper disable AccessToDisposedClosure
+
 [TestClass]
 public class WfpTests
 {
@@ -20,7 +22,7 @@ public class WfpTests
         using var firewall = new HFirewall();
 
         firewall.Start();
-        firewall.RunTransaction(ptr =>
+        firewall.RunTransaction(_ =>
         {
             var (providerKey, subLayerKey) = firewall.RegisterKeys();
             firewall.PermitAppId(
