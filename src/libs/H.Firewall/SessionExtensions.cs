@@ -95,15 +95,14 @@ public static class SessionExtensions
         this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
-        byte weightDeny,
-        byte weightAllow,
+        byte weight,
         Uri uri)
     {
         uri = uri ?? throw new ArgumentNullException(nameof(uri));
         
         var addresses = Dns.GetHostAddresses(uri.Host);
         
-        handle.PermitDns(providerKey, subLayerKey, weightAllow, weightDeny, addresses);
+        handle.PermitIpAddresses(providerKey, subLayerKey, weight, addresses);
     }
     
     public static void BlockUri(
@@ -151,6 +150,27 @@ public static class SessionExtensions
         //         "H.Wfp",
         //         $"Block DNS ({pair.Key})");
         // }
+    }
+    
+    public static void PermitIpAddresses(
+        this SafeHandle handle,
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        ICollection<IPAddress> addresses)
+    {
+        foreach (var pair in Layers.V4)
+        {
+            handle.AddAddressV4(
+                FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+                providerKey,
+                subLayerKey,
+                pair.Value,
+                weight,
+                addresses.Where(address => address.AddressFamily == AddressFamily.InterNetwork),
+                "H.Wfp",
+                $"Allow address ({pair.Key})");
+        }
     }
     
     public static void PermitDns(

@@ -488,6 +488,35 @@ public static class WfpMethods
                 .ToArray());
     }
 
+    public static Guid AddAddressV4(
+        this SafeHandle handle,
+        FWP_ACTION_TYPE action,
+        Guid providerKey,
+        Guid subLayerKey,
+        Guid layerKey,
+        byte weight,
+        IEnumerable<IPAddress> addresses,
+        string name,
+        string description)
+    {
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
+            action,
+            addresses.Select(address => new FWPM_FILTER_CONDITION0
+                {
+                    fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_ADDRESS,
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
+                    {
+                        type = FWP_DATA_TYPE.FWP_UINT32,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
+                        {
+                            uint32 = address.ToInteger(),
+                        }
+                    }
+                })
+                .ToArray());
+    }
+
     // public static unsafe Guid AllowDnsV6(
     //     this SafeHandle handle,
     //     Guid providerKey,

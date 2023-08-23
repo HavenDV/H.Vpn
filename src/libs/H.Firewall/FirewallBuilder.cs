@@ -1,3 +1,4 @@
+using System.Net;
 using System.Runtime.Versioning;
 using H.Wfp.Interop;
 
@@ -18,6 +19,7 @@ public class FirewallBuilder
         DomainNameSystem,
         Application,
         Uri,
+        IpAddress,
     }
     
     private sealed class Condition
@@ -26,6 +28,7 @@ public class FirewallBuilder
         public ConditionType Type { get; set; }
         public string Path { get; set; } = string.Empty;
         public Uri Uri { get; set; } = new("http://localhost/");
+        public IPAddress IpAddress { get; set; } = IPAddress.None;
     }
     
     public FirewallBuilder Block()
@@ -108,6 +111,18 @@ public class FirewallBuilder
         return this;
     }
     
+    public FirewallBuilder IpAddress(IPAddress address)
+    {
+        Conditions.Add(new Condition
+        {
+            Action = CurrentAction,
+            Type = ConditionType.IpAddress,
+            IpAddress = address,
+        });
+        
+        return this;
+    }
+    
     public HFirewall Build()
     {
         var firewall = new HFirewall();
@@ -154,9 +169,22 @@ public class FirewallBuilder
                         handle.PermitUri(
                             providerKey,
                             subLayerKey,
-                            weightDeny: weight++,
-                            weightAllow: weight++,
+                            weight: weight++,
                             condition.Uri);
+                        break;
+                    case (ConditionType.IpAddress, FWP_ACTION_TYPE.FWP_ACTION_BLOCK):
+                        handle.BlockIpAddresses(
+                            providerKey,
+                            subLayerKey,
+                            weight++,
+                            new []{ condition.IpAddress });
+                        break;
+                    case (ConditionType.IpAddress, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                        handle.PermitIpAddresses(
+                            providerKey,
+                            subLayerKey,
+                            weight: weight++,
+                            new []{ condition.IpAddress });
                         break;
                     default:
                         throw new NotImplementedException();
