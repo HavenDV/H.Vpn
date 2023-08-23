@@ -119,7 +119,7 @@ public static class SessionExtensions
             handle.AllowDnsV4(providerKey,
                 subLayerKey,
                 pair.Value,
-                weightDeny,
+                weightAllow,
                 addresses.Where(address => address.AddressFamily == AddressFamily.InterNetwork),
                 "H.Wfp",
                 $"Allow DNS ({pair.Key})");
