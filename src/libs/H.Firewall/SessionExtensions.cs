@@ -91,6 +91,21 @@ public static class SessionExtensions
         return WfpMethods.GetAppIdFromFileName(fileName);
     }
     
+    public static void PermitUri(
+        this SafeHandle handle,
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weightAllow,
+        byte weightDeny,
+        Uri uri)
+    {
+        uri = uri ?? throw new ArgumentNullException(nameof(uri));
+        
+        var addresses = Dns.GetHostAddresses(uri.Host);
+        
+        handle.PermitDns(providerKey, subLayerKey, weightAllow, weightDeny, addresses);
+    }
+    
     public static void BlockUri(
         this SafeHandle handle,
         Guid providerKey,
