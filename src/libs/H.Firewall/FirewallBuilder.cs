@@ -150,6 +150,14 @@ public class FirewallBuilder
                             weight++,
                             condition.Uri);
                         break;
+                    case (ConditionType.Uri, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                        handle.PermitUri(
+                            providerKey,
+                            subLayerKey,
+                            weightDeny: weight++,
+                            weightAllow: weight++,
+                            condition.Uri);
+                        break;
                     default:
                         throw new NotImplementedException();
                 }

@@ -95,8 +95,8 @@ public static class SessionExtensions
         this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
-        byte weightAllow,
         byte weightDeny,
+        byte weightAllow,
         Uri uri)
     {
         uri = uri ?? throw new ArgumentNullException(nameof(uri));
