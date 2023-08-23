@@ -42,27 +42,27 @@ public static class WfpMethods
         }
     }
 
-    public static void BeginTransaction(this SafeHandle engineHandle)
+    public static void BeginTransaction(this SafeHandle handle)
     {
         PInvoke.FwpmTransactionBegin0(
-            engineHandle: engineHandle,
+            engineHandle: handle,
             flags: 0).EnsureResultIsNull();
     }
 
-    public static void CommitTransaction(this SafeHandle engineHandle)
+    public static void CommitTransaction(this SafeHandle handle)
     {
         PInvoke.FwpmTransactionCommit0(
-            engineHandle: engineHandle).EnsureResultIsNull();
+            engineHandle: handle).EnsureResultIsNull();
     }
 
-    public static void AbortTransaction(this SafeHandle engineHandle)
+    public static void AbortTransaction(this SafeHandle handle)
     {
         PInvoke.FwpmTransactionAbort0(
-            engineHandle: engineHandle).EnsureResultIsNull();
+            engineHandle: handle).EnsureResultIsNull();
     }
 
     public static unsafe Guid AddProviderContext(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         string name,
         string description,
@@ -96,7 +96,7 @@ public static class WfpMethods
                 providerKey = &providerKey,
             };
             PInvoke.FwpmProviderContextAdd0(
-                engineHandle: engineHandle,
+                engineHandle: handle,
                 providerContext: in context,
                 sd: new PSECURITY_DESCRIPTOR(),
                 id: &id).EnsureResultIsNull();
@@ -106,7 +106,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid AddProvider(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         string name,
         string description)
     {
@@ -125,7 +125,7 @@ public static class WfpMethods
                 },
             };
             PInvoke.FwpmProviderAdd0(
-                engineHandle: engineHandle,
+                engineHandle: handle,
                 provider: in provider,
                 sd: new PSECURITY_DESCRIPTOR()).EnsureResultIsNull();
         }
@@ -134,7 +134,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid AddSubLayer(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         string name,
         string description)
@@ -157,7 +157,7 @@ public static class WfpMethods
                 weight = 0,
             };
             PInvoke.FwpmSubLayerAdd0(
-                engineHandle: engineHandle,
+                engineHandle: handle,
                 subLayer: in subLayer,
                 sd: new PSECURITY_DESCRIPTOR()).EnsureResultIsNull();
         }
@@ -179,7 +179,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid AddCallout(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid calloutKey,
         Guid providerKey,
         Guid applicableLayer,
@@ -204,7 +204,7 @@ public static class WfpMethods
                 flags = PInvoke.FWPM_CALLOUT_FLAG_USES_PROVIDER_CONTEXT,
             };
             PInvoke.FwpmCalloutAdd0(
-                engineHandle: engineHandle,
+                engineHandle: handle,
                 callout: in callout,
                 sd: new PSECURITY_DESCRIPTOR(),
                 id: &id).EnsureResultIsNull();
@@ -214,7 +214,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid AllowSplitAppIds(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -286,7 +286,7 @@ public static class WfpMethods
                 layerKey = layerKey,
             };
             PInvoke.FwpmFilterAdd0(
-                engineHandle: engineHandle,
+                engineHandle: handle,
                 filter: in filter,
                 sd: new PSECURITY_DESCRIPTOR(),
                 id: &id).EnsureResultIsNull();
@@ -296,7 +296,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid PermitAppId(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey, 
         Guid subLayerKey, 
         Guid layerKey,
@@ -305,7 +305,7 @@ public static class WfpMethods
         string name, 
         string description)
     {
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
                 new FWPM_FILTER_CONDITION0
@@ -325,7 +325,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid BlockUri(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey, 
         Guid subLayerKey, 
         Guid layerKey,
@@ -345,7 +345,7 @@ public static class WfpMethods
                 size = (uint)url.Length,
             };
             
-            return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+            return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
                 FWP_ACTION_TYPE.FWP_ACTION_BLOCK, new FWPM_FILTER_CONDITION0
                 {
                     fieldKey = PInvoke.FWPM_CONDITION_PEER_NAME,
@@ -363,7 +363,7 @@ public static class WfpMethods
     }
 
     public static Guid PermitLoopback(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -371,7 +371,7 @@ public static class WfpMethods
         string name,
         string description)
     {
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
                 new FWPM_FILTER_CONDITION0
@@ -391,7 +391,7 @@ public static class WfpMethods
     }
 
     public static Guid BlockAll(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -399,7 +399,7 @@ public static class WfpMethods
         string name,
         string description)
     {
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_BLOCK);
     }
 
@@ -446,7 +446,7 @@ public static class WfpMethods
     };
 
     public static Guid BlockDns(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -454,12 +454,12 @@ public static class WfpMethods
         string name,
         string description)
     {
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_BLOCK, DnsConditions);
     }
 
     public static Guid AddDnsV4(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         FWP_ACTION_TYPE action,
         Guid providerKey,
         Guid subLayerKey,
@@ -469,7 +469,7 @@ public static class WfpMethods
         string name,
         string description)
     {
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
             action,
             DnsConditions
                 .Concat(addresses.Select(address => new FWPM_FILTER_CONDITION0
@@ -489,7 +489,7 @@ public static class WfpMethods
     }
 
     // public static unsafe Guid AllowDnsV6(
-    //     this SafeHandle engineHandle,
+    //     this SafeHandle handle,
     //     Guid providerKey,
     //     Guid subLayerKey,
     //     Guid layerKey,
@@ -502,7 +502,7 @@ public static class WfpMethods
     //         .Select(address => address.ToArray16())
     //         .ToArray();
     //
-    //     return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+    //     return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
     //         FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
     //         DnsConditions
     //             .Concat(ptrs.Select(ptr => new FWPM_FILTER_CONDITION0
@@ -522,7 +522,7 @@ public static class WfpMethods
     // }
 
     public static unsafe Guid PermitNetworkInterface(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -531,7 +531,7 @@ public static class WfpMethods
         string name,
         string description)
     {
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]
             {
@@ -552,7 +552,7 @@ public static class WfpMethods
     }
 
     public static unsafe Guid PermitSubNetworkV4(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -569,7 +569,7 @@ public static class WfpMethods
             mask = mask.ToInteger(),
         };
 
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
                 new FWPM_FILTER_CONDITION0
@@ -591,7 +591,7 @@ public static class WfpMethods
     }
 
     public static Guid PermitTcpPortV4(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -600,7 +600,7 @@ public static class WfpMethods
         string name,
         string description)
     {
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
                 new FWPM_FILTER_CONDITION0
@@ -633,7 +633,7 @@ public static class WfpMethods
     }
 
     public static Guid PermitUdpPortV4(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -642,7 +642,7 @@ public static class WfpMethods
         string name,
         string description)
     {
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description,
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
                 new FWPM_FILTER_CONDITION0
@@ -675,7 +675,7 @@ public static class WfpMethods
     }
 
     public static Guid PermitProtocolV4(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -684,7 +684,7 @@ public static class WfpMethods
         string name,
         string description)
     {
-        return AddFilter(engineHandle, providerKey, subLayerKey, layerKey, weight, name, description, 
+        return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description, 
             FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
             new[]{
                 new FWPM_FILTER_CONDITION0
@@ -704,7 +704,7 @@ public static class WfpMethods
     }
 
     internal static unsafe Guid AddFilter(
-        this SafeHandle engineHandle,
+        this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -748,7 +748,7 @@ public static class WfpMethods
                 layerKey = layerKey,
             };
             PInvoke.FwpmFilterAdd0(
-                engineHandle: engineHandle,
+                engineHandle: handle,
                 filter: in filter,
                 sd: new PSECURITY_DESCRIPTOR(),
                 id: &id).EnsureResultIsNull();
