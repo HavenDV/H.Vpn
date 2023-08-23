@@ -41,6 +41,26 @@ public static class SessionExtensions
         }
     }
     
+    public static void BlockUri(
+        this SafeHandle handle,
+        Guid providerKey,
+        Guid subLayerKey,
+        Uri uri,
+        byte weight)
+    {
+        foreach (var pair in Layers.All)
+        {
+            handle.BlockUri(
+                providerKey,
+                subLayerKey,
+                pair.Value,
+                uri,
+                weight,
+                "H.Wfp",
+                $"Permit unrestricted traffic for ({uri}) ({pair.Key})");
+        }
+    }
+    
     public static void PermitAppId(
         this SafeHandle handle,
         Guid providerKey,
