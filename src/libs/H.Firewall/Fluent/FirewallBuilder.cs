@@ -192,6 +192,17 @@ public class FirewallBuilder
     }
     
     /// <summary>
+    /// Blocks/allows all connections to specified IP address.
+    /// </summary>
+    /// <returns></returns>
+    public FirewallBuilder IpAddress(params string[] addresses)
+    {
+        return IpAddress(addresses
+            .Select(IPAddress.Parse)
+            .ToArray());
+    }
+    
+    /// <summary>
     /// Blocks/allows all connections to IKEv2.
     /// </summary>
     /// <returns></returns>
@@ -274,6 +285,17 @@ public class FirewallBuilder
     }
     
     /// <summary>
+    /// Blocks/allows all connections to specified local sub network.
+    /// </summary>
+    /// <returns></returns>
+    public FirewallBuilder LocalSubNetwork(params string[] networks)
+    {
+        return LocalSubNetwork(networks
+            .Select(IPNetwork.Parse)
+            .ToArray());
+    }
+    
+    /// <summary>
     /// Blocks/allows all connections to specified remote sub network.
     /// </summary>
     /// <returns></returns>
@@ -293,6 +315,17 @@ public class FirewallBuilder
         }
         
         return this;
+    }
+    
+    /// <summary>
+    /// Blocks/allows all connections to specified remote sub network.
+    /// </summary>
+    /// <returns></returns>
+    public FirewallBuilder RemoteSubNetwork(params string[] networks)
+    {
+        return RemoteSubNetwork(networks
+            .Select(IPNetwork.Parse)
+            .ToArray());
     }
     
     /// <summary>
