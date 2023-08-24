@@ -50,7 +50,19 @@ public class WfpTests
             .Localhost()
             .DomainNameSystem()
             .LocalAreaNetwork()
+            .Url("https://www.bing.com/")
             .Application(@"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe")
+            .Build();
+
+        await Task.Delay(TimeSpan.FromSeconds(15));
+    }
+
+    [TestMethod]
+    public async Task BlockBingOnly()
+    {
+        using var firewall = new FirewallBuilder()
+            .Block()
+            .Url("https://www.bing.com/")
             .Build();
 
         await Task.Delay(TimeSpan.FromSeconds(15));
