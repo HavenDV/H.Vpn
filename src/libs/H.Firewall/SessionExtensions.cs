@@ -80,15 +80,18 @@ public static class SessionExtensions
     {
         foreach (var pair in Layers.V4)
         {
-            handle.AddAddressV4(
-                FWP_ACTION_TYPE.FWP_ACTION_BLOCK,
-                providerKey,
-                subLayerKey,
-                pair.Value,
-                weight,
-                addresses.Where(address => address.AddressFamily == AddressFamily.InterNetwork),
-                "H.Wfp",
-                $"Block addresses ({pair.Key})");
+            foreach (var address in addresses.Where(static address => address.AddressFamily == AddressFamily.InterNetwork))
+            {
+                handle.AddAddressV4(
+                    FWP_ACTION_TYPE.FWP_ACTION_BLOCK,
+                    providerKey,
+                    subLayerKey,
+                    pair.Value,
+                    weight,
+                    new []{ address },
+                    "H.Wfp",
+                    $"Block address - {address} ({pair.Key})");
+            }
         }
     }
     
