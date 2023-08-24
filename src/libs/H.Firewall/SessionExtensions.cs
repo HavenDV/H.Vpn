@@ -157,7 +157,7 @@ public static class SessionExtensions
         Guid providerKey,
         Guid subLayerKey,
         byte weight,
-        ICollection<IPAddress> addresses)
+        IReadOnlyCollection<IPAddress> addresses)
     {
         foreach (var pair in Layers.V4)
         {
@@ -515,14 +515,14 @@ public static class SessionExtensions
         handle.PermitDns(providerKey, subLayerKey, weightAllow, weightDeny, dnsServers);
     }
 
-    private const byte cIPPROTO_IPinIP = 4;
-    
     public static void PermitIKEv2(
         this SafeHandle handle,
         Guid providerKey,
         Guid subLayerKey,
         byte weight)
     {
+        const byte cIPPROTO_IPinIP = 4;
+    
         handle.PermitLocalSubNetworkV4(providerKey, subLayerKey, weight, IPNetwork.Parse("10.0.0.0/8"));
         handle.PermitProtocolV4(providerKey, subLayerKey, weight, cIPPROTO_IPinIP);
     }

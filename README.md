@@ -21,25 +21,15 @@ NOTE: To use this code in your application, you must either run it as an adminis
 run it through a service talking to it via IPC (eg [H.Pipes](https://github.com/HavenDV/H.Pipes)).
 Else you will get the following error: `0x8032000D. The call must be made from within an explicit transaction.`
 ```cs
-using var firewall = new HFirewall();
-
-firewall.Start();
-firewall.RunTransaction(ptr =>
-{
-    var (providerKey, subLayerKey) = firewall.RegisterKeys();
-    firewall.PermitAppId(
-        providerKey,
-        subLayerKey,
-        @"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe",
-        15);
-
-    firewall.PermitLan(providerKey, subLayerKey, 12);
-    firewall.PermitDns(providerKey, subLayerKey, 11, 10);
-    firewall.PermitLocalhost(providerKey, subLayerKey, 1);
-
-    // Block everything not allowed explicitly
-    firewall.BlockAll(providerKey, subLayerKey, 0);
-});
+using var firewall = new FirewallBuilder()
+    .Block()
+    .All()
+    .Allow()
+    .Localhost()
+    .DomainNameSystem()
+    .LocalAreaNetwork()
+    .Application(@"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe")
+    .Build();
 
 await Task.Delay(TimeSpan.FromSeconds(15));
 ```
