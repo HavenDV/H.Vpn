@@ -4,10 +4,15 @@ using H.Wfp.Interop;
 
 namespace H.Firewall;
 
+/// <summary>
+/// The order of the declaration matters. Each subsequent statement has more weight. <br/>
+/// By default, all actions apply for both Internet Protocol version 4 and Internet Protocol version 6.
+/// </summary>
 [SupportedOSPlatform("windows6.0.6000")]
 public class FirewallBuilder
 {
     private FWP_ACTION_TYPE CurrentAction { get; set; } = FWP_ACTION_TYPE.FWP_ACTION_BLOCK;
+    private InternetProtocolVersion CurrentVersion { get; set; } = InternetProtocolVersion.All;
 
     private List<Condition> Conditions { get; } = new();
 
@@ -19,7 +24,7 @@ public class FirewallBuilder
     {
         CurrentAction = FWP_ACTION_TYPE.FWP_ACTION_BLOCK;
         return this;
-    } 
+    }
 
     /// <summary>
     /// Specifies that everything following will be allowed.
@@ -28,6 +33,36 @@ public class FirewallBuilder
     public FirewallBuilder Allow()
     {
         CurrentAction = FWP_ACTION_TYPE.FWP_ACTION_PERMIT;
+        return this;
+    }
+
+    /// <summary>
+    /// Specifies that everything following will be only for IPv4.
+    /// </summary>
+    /// <returns></returns>
+    public FirewallBuilder ForInternetProtocolVersion4()
+    {
+        CurrentVersion = InternetProtocolVersion.Version4;
+        return this;
+    }
+
+    /// <summary>
+    /// Specifies that everything following will be only for IPv6.
+    /// </summary>
+    /// <returns></returns>
+    public FirewallBuilder ForInternetProtocolVersion6()
+    {
+        CurrentVersion = InternetProtocolVersion.Version6;
+        return this;
+    }
+
+    /// <summary>
+    /// Specifies that everything following will be for all IP versions.
+    /// </summary>
+    /// <returns></returns>
+    public FirewallBuilder ForAllInternetProtocolVersions()
+    {
+        CurrentVersion = InternetProtocolVersion.All;
         return this;
     }
     
@@ -40,6 +75,7 @@ public class FirewallBuilder
         Conditions.Add(new Condition
         {
             Action = CurrentAction,
+            Version = CurrentVersion,
             Type = ConditionType.Localhost,
         });
         
@@ -55,6 +91,7 @@ public class FirewallBuilder
         Conditions.Add(new Condition
         {
             Action = CurrentAction,
+            Version = CurrentVersion,
             Type = ConditionType.All,
         });
         
@@ -70,6 +107,7 @@ public class FirewallBuilder
         Conditions.Add(new Condition
         {
             Action = CurrentAction,
+            Version = CurrentVersion,
             Type = ConditionType.LocalAreaNetwork,
         });
         
@@ -85,6 +123,7 @@ public class FirewallBuilder
         Conditions.Add(new Condition
         {
             Action = CurrentAction,
+            Version = CurrentVersion,
             Type = ConditionType.DomainNameSystem,
         });
         
@@ -104,6 +143,7 @@ public class FirewallBuilder
             Conditions.Add(new Condition
             {
                 Action = CurrentAction,
+                Version = CurrentVersion,
                 Type = ConditionType.Application,
                 Path = path,
             });
@@ -125,6 +165,7 @@ public class FirewallBuilder
             Conditions.Add(new Condition
             {
                 Action = CurrentAction,
+                Version = CurrentVersion,
                 Type = ConditionType.Uri,
                 Uri = uri,
             });
@@ -142,6 +183,7 @@ public class FirewallBuilder
         Conditions.Add(new Condition
         {
             Action = CurrentAction,
+            Version = CurrentVersion,
             Type = ConditionType.IpAddress,
             Addresses = addresses,
         });
@@ -158,6 +200,7 @@ public class FirewallBuilder
         Conditions.Add(new Condition
         {
             Action = CurrentAction,
+            Version = CurrentVersion,
             Type = ConditionType.InternetKeyExchangeVersion2,
         });
         
@@ -168,7 +211,7 @@ public class FirewallBuilder
     /// Blocks/allows all connections uses specified TCP port.
     /// </summary>
     /// <returns></returns>
-    public FirewallBuilder TcpPortV4(params ushort[] ports)
+    public FirewallBuilder TcpPort(params ushort[] ports)
     {
         ports = ports ?? throw new ArgumentNullException(nameof(ports));
         
@@ -177,7 +220,8 @@ public class FirewallBuilder
             Conditions.Add(new Condition
             {
                 Action = CurrentAction,
-                Type = ConditionType.TcpPortV4,
+                Version = CurrentVersion,
+                Type = ConditionType.TcpPort,
                 Port = port,
             });
         }
@@ -189,7 +233,7 @@ public class FirewallBuilder
     /// Blocks/allows all connections uses specified UDP port.
     /// </summary>
     /// <returns></returns>
-    public FirewallBuilder UdpPortV4(params ushort[] ports)
+    public FirewallBuilder UdpPort(params ushort[] ports)
     {
         ports = ports ?? throw new ArgumentNullException(nameof(ports));
         
@@ -198,7 +242,8 @@ public class FirewallBuilder
             Conditions.Add(new Condition
             {
                 Action = CurrentAction,
-                Type = ConditionType.UdpPortV4,
+                Version = CurrentVersion,
+                Type = ConditionType.UdpPort,
                 Port = port,
             });
         }
@@ -210,7 +255,7 @@ public class FirewallBuilder
     /// Blocks/allows all connections to specified local sub network.
     /// </summary>
     /// <returns></returns>
-    public FirewallBuilder LocalSubNetworkV4(params IPNetwork[] networks)
+    public FirewallBuilder LocalSubNetwork(params IPNetwork[] networks)
     {
         networks = networks ?? throw new ArgumentNullException(nameof(networks));
         
@@ -219,7 +264,8 @@ public class FirewallBuilder
             Conditions.Add(new Condition
             {
                 Action = CurrentAction,
-                Type = ConditionType.LocalSubNetworkV4,
+                Version = CurrentVersion,
+                Type = ConditionType.LocalSubNetwork,
                 Network = network,
             });
         }
@@ -231,7 +277,7 @@ public class FirewallBuilder
     /// Blocks/allows all connections to specified remote sub network.
     /// </summary>
     /// <returns></returns>
-    public FirewallBuilder RemoteSubNetworkV4(params IPNetwork[] networks)
+    public FirewallBuilder RemoteSubNetwork(params IPNetwork[] networks)
     {
         networks = networks ?? throw new ArgumentNullException(nameof(networks));
         
@@ -240,7 +286,8 @@ public class FirewallBuilder
             Conditions.Add(new Condition
             {
                 Action = CurrentAction,
-                Type = ConditionType.RemoteSubNetworkV4,
+                Version = CurrentVersion,
+                Type = ConditionType.RemoteSubNetwork,
                 Network = network,
             });
         }
@@ -261,6 +308,7 @@ public class FirewallBuilder
             Conditions.Add(new Condition
             {
                 Action = CurrentAction,
+                Version = CurrentVersion,
                 Type = ConditionType.NetworkInterface,
                 InterfaceIndex = index,
             });
@@ -343,28 +391,28 @@ public class FirewallBuilder
                             subLayerKey,
                             weight: weight++);
                         break;
-                    case (ConditionType.TcpPortV4, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.TcpPort, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
                         handle.PermitTcpPortV4(
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             port: condition.Port);
                         break;
-                    case (ConditionType.UdpPortV4, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.UdpPort, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
                         handle.PermitUdpPortV4(
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             port: condition.Port);
                         break;
-                    case (ConditionType.LocalSubNetworkV4, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.LocalSubNetwork, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
                         handle.PermitLocalSubNetworkV4(
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             network: condition.Network);
                         break;
-                    case (ConditionType.RemoteSubNetworkV4, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.RemoteSubNetwork, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
                         handle.PermitRemoteSubNetworkV4(
                             providerKey,
                             subLayerKey,

@@ -10,9 +10,9 @@ internal enum ConditionType
     Uri,
     IpAddress,
     InternetKeyExchangeVersion2,
-    TcpPortV4,
-    UdpPortV4,
-    LocalSubNetworkV4,
-    RemoteSubNetworkV4,
+    TcpPort,
+    UdpPort,
+    LocalSubNetwork,
+    RemoteSubNetwork,
     NetworkInterface,
 }
