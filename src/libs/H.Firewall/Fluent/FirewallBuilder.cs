@@ -166,6 +166,19 @@ public class FirewallBuilder
     }
     
     /// <summary>
+    /// Blocks/allows all connections to specified URL.
+    /// </summary>
+    /// <returns></returns>
+    public FirewallBuilder Url(params string[] urls)
+    {
+        urls = urls ?? throw new ArgumentNullException(nameof(urls));
+
+        return urls
+            .Select(static url => new Uri(url))
+            .Aggregate(this, static (builder, addresses) => builder.Uri(addresses));
+    }
+    
+    /// <summary>
     /// Blocks/allows all connections to specified IP address.
     /// </summary>
     /// <returns></returns>
