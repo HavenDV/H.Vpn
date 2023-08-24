@@ -37,7 +37,9 @@ await Task.Delay(TimeSpan.FromSeconds(15));
 H.Firewall uses [WFP](https://docs.microsoft.com/en-us/windows/win32/fwp/windows-filtering-platform-start-page) calls internally, 
 you can learn more about this.
 
-### Usage
+### Links
+- [Introduction to the Windows Filtering Platform](https://scorpiosoftware.net/2022/12/25/introduction-to-the-windows-filtering-platform/]
+- [WFPExplorer](https://github.com/zodiacon/WFPExplorer)
 
 ### Contacts
 * [mail](mailto:havendv@gmail.com)
