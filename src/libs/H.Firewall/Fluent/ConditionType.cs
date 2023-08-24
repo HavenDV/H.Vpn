@@ -7,7 +7,6 @@ internal enum ConditionType
     LocalAreaNetwork,
     DomainNameSystem,
     Application,
-    Uri,
     IpAddress,
     InternetKeyExchangeVersion2,
     TcpPort,

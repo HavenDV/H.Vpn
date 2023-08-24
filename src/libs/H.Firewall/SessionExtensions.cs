@@ -41,26 +41,6 @@ public static class SessionExtensions
         }
     }
     
-    public static void BlockUri(
-        this SafeHandle handle,
-        Guid providerKey,
-        Guid subLayerKey,
-        Uri uri,
-        byte weight)
-    {
-        foreach (var pair in Layers.All)
-        {
-            handle.BlockUri(
-                providerKey,
-                subLayerKey,
-                pair.Value,
-                uri,
-                weight,
-                "H.Wfp",
-                $"Permit unrestricted traffic for ({uri}) ({pair.Key})");
-        }
-    }
-    
     public static void PermitAppId(
         this SafeHandle handle,
         Guid providerKey,
@@ -91,34 +71,6 @@ public static class SessionExtensions
         return WfpMethods.GetAppIdFromFileName(fileName);
     }
     
-    public static void PermitUri(
-        this SafeHandle handle,
-        Guid providerKey,
-        Guid subLayerKey,
-        byte weight,
-        Uri uri)
-    {
-        uri = uri ?? throw new ArgumentNullException(nameof(uri));
-        
-        var addresses = Dns.GetHostAddresses(uri.Host);
-        
-        handle.PermitIpAddresses(providerKey, subLayerKey, weight, addresses);
-    }
-    
-    public static void BlockUri(
-        this SafeHandle handle,
-        Guid providerKey,
-        Guid subLayerKey,
-        byte weight,
-        Uri uri)
-    {
-        uri = uri ?? throw new ArgumentNullException(nameof(uri));
-        
-        var addresses = Dns.GetHostAddresses(uri.Host);
-        
-        handle.BlockIpAddresses(providerKey, subLayerKey, weight, addresses);
-    }
-    
     public static void BlockIpAddresses(
         this SafeHandle handle,
         Guid providerKey,
@@ -128,7 +80,7 @@ public static class SessionExtensions
     {
         foreach (var pair in Layers.V4)
         {
-            handle.AddDnsV4(
+            handle.AddAddressV4(
                 FWP_ACTION_TYPE.FWP_ACTION_BLOCK,
                 providerKey,
                 subLayerKey,
@@ -136,20 +88,8 @@ public static class SessionExtensions
                 weight,
                 addresses.Where(address => address.AddressFamily == AddressFamily.InterNetwork),
                 "H.Wfp",
-                $"Block DNS ({pair.Key})");
+                $"Block addresses ({pair.Key})");
         }
-
-        // foreach (var pair in Layers.V6)
-        // {
-        //     handle.BlockDnsV6(
-        //         providerKey,
-        //         subLayerKey,
-        //         pair.Value,
-        //         weight,
-        //         addresses.Where(address => address.AddressFamily == AddressFamily.InterNetworkV6),
-        //         "H.Wfp",
-        //         $"Block DNS ({pair.Key})");
-        // }
     }
     
     public static void PermitIpAddresses(
@@ -169,7 +109,7 @@ public static class SessionExtensions
                 weight,
                 addresses.Where(address => address.AddressFamily == AddressFamily.InterNetwork),
                 "H.Wfp",
-                $"Allow address ({pair.Key})");
+                $"Allow addresses ({pair.Key})");
         }
     }
     

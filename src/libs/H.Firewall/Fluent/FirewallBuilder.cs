@@ -159,19 +159,10 @@ public class FirewallBuilder
     public FirewallBuilder Uri(params Uri[] uris)
     {
         uris = uris ?? throw new ArgumentNullException(nameof(uris));
-        
-        foreach (var uri in uris)
-        {
-            Conditions.Add(new Condition
-            {
-                Action = CurrentAction,
-                Version = CurrentVersion,
-                Type = ConditionType.Uri,
-                Uri = uri,
-            });
-        }
-        
-        return this;
+
+        return uris
+            .Select(static uri => Dns.GetHostAddresses(uri.Host))
+            .Aggregate(this, static (builder, addresses) => builder.IpAddress(addresses));
     }
     
     /// <summary>
@@ -389,20 +380,6 @@ public class FirewallBuilder
                             subLayerKey,
                             condition.Path,
                             weight++);
-                        break;
-                    case (ConditionType.Uri, FWP_ACTION_TYPE.FWP_ACTION_BLOCK):
-                        handle.BlockUri(
-                            providerKey,
-                            subLayerKey,
-                            weight++,
-                            condition.Uri);
-                        break;
-                    case (ConditionType.Uri, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
-                        handle.PermitUri(
-                            providerKey,
-                            subLayerKey,
-                            weight: weight++,
-                            condition.Uri);
                         break;
                     case (ConditionType.IpAddress, FWP_ACTION_TYPE.FWP_ACTION_BLOCK):
                         handle.BlockIpAddresses(
