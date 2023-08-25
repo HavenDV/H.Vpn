@@ -153,6 +153,41 @@ public class FirewallBuilder
     }
     
     /// <summary>
+    /// Blocks/allows all connections by peer name.
+    /// </summary>
+    /// <returns></returns>
+    public FirewallBuilder PeerName(params Uri[] uris)
+    {
+        uris = uris ?? throw new ArgumentNullException(nameof(uris));
+
+        foreach (var uri in uris)
+        {
+            Conditions.Add(new Condition
+            {
+                Action = CurrentAction,
+                Version = CurrentVersion,
+                Type = ConditionType.PeerName,
+                Uri = uri,
+            });
+        }
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Blocks/allows all connections by peer name.
+    /// </summary>
+    /// <returns></returns>
+    public FirewallBuilder PeerName(params string[] urls)
+    {
+        urls = urls ?? throw new ArgumentNullException(nameof(urls));
+
+        return urls
+            .Select(static url => new Uri(url))
+            .Aggregate(this, static (builder, addresses) => builder.PeerName(addresses));
+    }
+    
+    /// <summary>
     /// Blocks/allows all connections to specified URI.
     /// </summary>
     /// <returns></returns>
@@ -448,6 +483,22 @@ public class FirewallBuilder
                             subLayerKey,
                             weight: weight++,
                             ifLuid: condition.InterfaceIndex);
+                        break;
+                    case (ConditionType.PeerName, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                        handle.AddPeerName(
+                            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+                            providerKey,
+                            subLayerKey,
+                            weight: weight++,
+                            uri: condition.Uri);
+                        break;
+                    case (ConditionType.PeerName, FWP_ACTION_TYPE.FWP_ACTION_BLOCK):
+                        handle.AddPeerName(
+                            FWP_ACTION_TYPE.FWP_ACTION_BLOCK,
+                            providerKey,
+                            subLayerKey,
+                            weight: weight++,
+                            uri: condition.Uri);
                         break;
                     default:
                         throw new NotImplementedException();

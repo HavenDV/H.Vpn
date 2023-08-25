@@ -183,6 +183,28 @@ public static class SessionExtensions
                 $"Permit traffic on TAP adapter ({pair.Key})");
         }
     }
+
+    public static void AddPeerName(
+        this SafeHandle handle,
+        FWP_ACTION_TYPE action,
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        Uri uri)
+    {
+        foreach (var pair in Layers.V4)
+        {
+            handle.AddPeerName(
+                action,
+                providerKey,
+                subLayerKey,
+                layerKey: pair.Value,
+                uri,
+                weight,
+                "H.Wfp",
+                $"Permit traffic by peer name ({pair.Key})");
+        }
+    }
     
     public static void PermitSubNetworkV4(
         this SafeHandle handle,

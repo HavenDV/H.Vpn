@@ -14,4 +14,5 @@ internal enum ConditionType
     LocalSubNetwork,
     RemoteSubNetwork,
     NetworkInterface,
+    PeerName,
 }

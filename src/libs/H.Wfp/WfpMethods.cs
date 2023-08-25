@@ -321,43 +321,43 @@ public static class WfpMethods
             });
     }
 
-    // public static unsafe Guid BlockUri(
-    //     this SafeHandle handle,
-    //     Guid providerKey, 
-    //     Guid subLayerKey, 
-    //     Guid layerKey,
-    //     Uri uri,
-    //     byte weight, 
-    //     string name, 
-    //     string description)
-    // {
-    //     var url = uri.ToString();
-    //     var bytes = Encoding.UTF8.GetBytes(url);
-    //     
-    //     fixed (byte* bytesPtr = bytes)
-    //     {
-    //         var blob = new FWP_BYTE_BLOB
-    //         {
-    //             data = bytesPtr,
-    //             size = (uint)url.Length,
-    //         };
-    //         
-    //         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-    //             FWP_ACTION_TYPE.FWP_ACTION_BLOCK, new FWPM_FILTER_CONDITION0
-    //             {
-    //                 fieldKey = PInvoke.FWPM_CONDITION_PEER_NAME,
-    //                 matchType = FWP_MATCH_TYPE.FWP_MATCH_PREFIX,
-    //                 conditionValue = new FWP_CONDITION_VALUE0
-    //                 {
-    //                     type = FWP_DATA_TYPE.FWP_BYTE_BLOB_TYPE,
-    //                     Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
-    //                     {
-    //                         byteBlob = &blob,
-    //                     }
-    //                 }
-    //             });
-    //     }
-    // }
+    public static unsafe Guid AddPeerName(
+        this SafeHandle handle,
+        FWP_ACTION_TYPE action,
+        Guid providerKey, 
+        Guid subLayerKey, 
+        Guid layerKey,
+        Uri uri,
+        byte weight, 
+        string name, 
+        string description)
+    {
+        var bytes = Encoding.UTF8.GetBytes(uri.Host);
+        
+        fixed (byte* bytesPtr = bytes)
+        {
+            var blob = new FWP_BYTE_BLOB
+            {
+                data = bytesPtr,
+                size = (uint)uri.Host.Length,
+            };
+            
+            return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
+                action, new FWPM_FILTER_CONDITION0
+                {
+                    fieldKey = PInvoke.FWPM_CONDITION_PEER_NAME,
+                    matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                    conditionValue = new FWP_CONDITION_VALUE0
+                    {
+                        type = FWP_DATA_TYPE.FWP_BYTE_BLOB_TYPE,
+                        Anonymous = new FWP_CONDITION_VALUE0._Anonymous_e__Union
+                        {
+                            byteBlob = &blob,
+                        }
+                    }
+                });
+        }
+    }
 
     public static Guid PermitLoopback(
         this SafeHandle handle,
