@@ -339,7 +339,7 @@ public static class WfpMethods
             var blob = new FWP_BYTE_BLOB
             {
                 data = bytesPtr,
-                size = (uint)uri.Host.Length,
+                size = (uint)bytes.Length,
             };
             
             return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,

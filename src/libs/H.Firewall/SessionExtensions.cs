@@ -192,7 +192,7 @@ public static class SessionExtensions
         byte weight,
         Uri uri)
     {
-        foreach (var pair in Layers.V4)
+        foreach (var pair in new[] { Layers.V4.First() })
         {
             handle.AddPeerName(
                 action,
