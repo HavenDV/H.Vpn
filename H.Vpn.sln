@@ -9,8 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		src\Directory.Build.props = src\Directory.Build.props
 		src\Directory.Build.targets = src\Directory.Build.targets
 		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
-		LICENSE.txt = LICENSE.txt
 		README.md = README.md
+		LICENSE = LICENSE
+		.github\workflows\pull-request.yml = .github\workflows\pull-request.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{DFAEA034-20D3-46BD-A2FB-E09CB731C4D7}"
