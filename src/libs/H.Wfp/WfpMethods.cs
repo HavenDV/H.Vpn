@@ -570,8 +570,9 @@ public static class WfpMethods
             });
     }
 
-    public static unsafe Guid PermitSubNetworkV4(
+    public static unsafe Guid AddSubNetworkV4(
         this SafeHandle handle,
+        FWP_ACTION_TYPE action,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -589,7 +590,7 @@ public static class WfpMethods
         };
 
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT, new FWPM_FILTER_CONDITION0
+            action, new FWPM_FILTER_CONDITION0
             {
                 fieldKey = isLocalAddress
                     ? PInvoke.FWPM_CONDITION_IP_LOCAL_ADDRESS

@@ -217,7 +217,34 @@ public static class SessionExtensions
     {
         foreach (var pair in Layers.V4)
         {
-            handle.PermitSubNetworkV4(providerKey,
+            handle.AddSubNetworkV4(
+                action: FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+                providerKey,
+                subLayerKey,
+                pair.Value,
+                weight,
+                address,
+                mask,
+                isLocalAddress,
+                "H.Wfp",
+                $"Permit traffic on LAN network ({pair.Key})");
+        }
+    }
+    
+    public static void BlockSubNetworkV4(
+        this SafeHandle handle,
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        IPAddress address,
+        IPAddress mask,
+        bool isLocalAddress)
+    {
+        foreach (var pair in Layers.V4)
+        {
+            handle.AddSubNetworkV4(
+                action: FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+                providerKey,
                 subLayerKey,
                 pair.Value,
                 weight,
@@ -251,6 +278,18 @@ public static class SessionExtensions
         network = network ?? throw new ArgumentNullException(nameof(network));
 
         handle.PermitSubNetworkV4(providerKey, subLayerKey, weight, network.Network, network.Netmask, false);
+    }
+
+    public static void BlockRemoteSubNetworkV4(
+        this SafeHandle handle,
+        Guid providerKey,
+        Guid subLayerKey,
+        byte weight,
+        IPNetwork network)
+    {
+        network = network ?? throw new ArgumentNullException(nameof(network));
+
+        handle.BlockSubNetworkV4(providerKey, subLayerKey, weight, network.Network, network.Netmask, false);
     }
 
     public static void PermitTcpPortV4(

@@ -477,6 +477,13 @@ public class FirewallBuilder
                             weight: weight++,
                             network: condition.Network);
                         break;
+                    case (ConditionType.RemoteSubNetwork, FWP_ACTION_TYPE.FWP_ACTION_BLOCK):
+                        handle.BlockRemoteSubNetworkV4(
+                            providerKey,
+                            subLayerKey,
+                            weight: weight++,
+                            network: condition.Network);
+                        break;
                     case (ConditionType.NetworkInterface, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
                         handle.PermitNetworkInterface(
                             providerKey,
