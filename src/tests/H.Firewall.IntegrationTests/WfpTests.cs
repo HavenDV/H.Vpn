@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Net;
+using System.Runtime.InteropServices;
 using H.Wfp;
 
 namespace H.Firewall.Tests;
@@ -76,8 +77,8 @@ public class WfpTests
         using var firewall = new FirewallBuilder()
             .Block()
             .Application(@"C:\Program Files\Google\Chrome\Application\chrome.exe")
-            //.Allow()
-            //.RemoteSubNetwork(IPNetwork.Parse(""))
+            .Allow()
+            .RemoteSubNetwork(IPNetwork.Parse("216.0.0.0/8"))
             .Build();
 
         await Task.Delay(TimeSpan.FromSeconds(60));
