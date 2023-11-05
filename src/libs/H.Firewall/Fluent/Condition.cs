@@ -1,5 +1,5 @@
 using System.Net;
-using H.Wfp.Interop;
+using H.Wfp;
 
 namespace H.Firewall;
 

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using H.Wfp;
 
 namespace H.Firewall.Tests;
 
@@ -23,7 +24,8 @@ public class WfpTests
         firewall.RunTransaction(handle =>
         {
             var (providerKey, subLayerKey) = handle.RegisterKeys();
-            handle.PermitAppId(
+            handle.AddAppId(
+                ActionType.Permit,
                 providerKey,
                 subLayerKey,
                 @"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe",

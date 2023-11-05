@@ -1,4 +1,4 @@
-﻿namespace H.Wfp.Interop;
+﻿namespace H.Wfp;
 
 public enum ActionType
 {
