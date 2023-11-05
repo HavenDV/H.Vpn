@@ -1,6 +1,6 @@
 using System.Net;
 using System.Runtime.Versioning;
-using H.Wfp.Interop;
+using H.Wfp;
 
 namespace H.Firewall;
 

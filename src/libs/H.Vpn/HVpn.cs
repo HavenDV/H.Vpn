@@ -4,6 +4,7 @@ using H.OpenVpn;
 using System.Net;
 using System.Reflection;
 using System.Runtime.Versioning;
+using H.Wfp;
 
 namespace H.Vpn;
 
@@ -168,15 +169,15 @@ public class HVpn : IDisposable
             if (settings.EnableKillSwitch)
             {
                 // H.Wfp-Service.exe
-                handle.PermitAppId(providerKey, subLayerKey, GetServiceProcessPath(), 15);
+                handle.AddAppId(ActionType.Permit, providerKey, subLayerKey, GetServiceProcessPath(), 15);
                 // OpenVPN.exe
-                handle.PermitAppId(providerKey, subLayerKey, GetOpenVpnPath(), 14);
+                handle.AddAppId(ActionType.Permit, providerKey, subLayerKey, GetOpenVpnPath(), 14);
 
                 // H.Wfp.exe
 #if DEBUG
-                handle.PermitAppId(providerKey, subLayerKey, @"C:\Program Files\H.Wfp\H.Wfp.exe", 13);
+                handle.AddAppId(ActionType.Permit, providerKey, subLayerKey, @"C:\Program Files\H.Wfp\H.Wfp.exe", 13);
 #else
-                handle.PermitAppId(providerKey, subLayerKey, GetGuiProcessPath(), 13);
+                handle.AddAppId(ActionType.Permit, providerKey, subLayerKey, GetGuiProcessPath(), 13);
 #endif
 
                 if (settings.AllowLan)
