@@ -21,8 +21,9 @@ public static class SessionExtensions
         return (providerGuid, subLayerGuid);
     }
     
-    public static void PermitAppId(
+    public static void AddAppId(
         this SafeHandle handle,
+        ActionType action,
         Guid providerKey,
         Guid subLayerKey,
         SafeFwpmHandle appId,
@@ -30,7 +31,8 @@ public static class SessionExtensions
     {
         foreach (var pair in Layers.All)
         {
-            handle.PermitAppId(
+            handle.AddAppId(
+                action: action,
                 providerKey,
                 subLayerKey,
                 pair.Value,
@@ -41,8 +43,9 @@ public static class SessionExtensions
         }
     }
     
-    public static void PermitAppId(
+    public static void AddAppId(
         this SafeHandle handle,
+        ActionType action,
         Guid providerKey,
         Guid subLayerKey,
         string path,
@@ -52,7 +55,7 @@ public static class SessionExtensions
         {
             using var id = GetAppId(path);
 
-            handle.PermitAppId(providerKey, subLayerKey, id, weight);
+            handle.AddAppId(action, providerKey, subLayerKey, id, weight);
         }
         catch (Exception exception)
         {
@@ -83,7 +86,7 @@ public static class SessionExtensions
             foreach (var address in addresses.Where(static address => address.AddressFamily == AddressFamily.InterNetwork))
             {
                 handle.AddAddressV4(
-                    FWP_ACTION_TYPE.FWP_ACTION_BLOCK,
+                    ActionType.Block,
                     providerKey,
                     subLayerKey,
                     pair.Value,
@@ -105,7 +108,7 @@ public static class SessionExtensions
         foreach (var pair in Layers.V4)
         {
             handle.AddAddressV4(
-                FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+                ActionType.Permit,
                 providerKey,
                 subLayerKey,
                 pair.Value,
@@ -142,7 +145,7 @@ public static class SessionExtensions
         foreach (var pair in Layers.V4)
         {
             handle.AddDnsV4(
-                FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+                ActionType.Permit,
                 providerKey,
                 subLayerKey,
                 pair.Value,
@@ -186,7 +189,7 @@ public static class SessionExtensions
 
     public static void AddPeerName(
         this SafeHandle handle,
-        FWP_ACTION_TYPE action,
+        ActionType action,
         Guid providerKey,
         Guid subLayerKey,
         byte weight,
@@ -218,7 +221,7 @@ public static class SessionExtensions
         foreach (var pair in Layers.V4)
         {
             handle.AddSubNetworkV4(
-                action: FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+                action: ActionType.Permit,
                 providerKey,
                 subLayerKey,
                 pair.Value,
@@ -243,7 +246,7 @@ public static class SessionExtensions
         foreach (var pair in Layers.V4)
         {
             handle.AddSubNetworkV4(
-                action: FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+                action: ActionType.Permit,
                 providerKey,
                 subLayerKey,
                 pair.Value,

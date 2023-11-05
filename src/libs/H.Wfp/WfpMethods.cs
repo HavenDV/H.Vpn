@@ -268,7 +268,7 @@ public static class WfpMethods
                 flags = FWPM_FILTER_FLAGS.FWPM_FILTER_FLAG_HAS_PROVIDER_CONTEXT,
                 action = new FWPM_ACTION0
                 {
-                    type = (uint)FWP_ACTION_TYPE.FWP_ACTION_CALLOUT_UNKNOWN,
+                    type = FWP_ACTION_TYPE.FWP_ACTION_CALLOUT_UNKNOWN,
                     Anonymous = new FWPM_ACTION0._Anonymous_e__Union
                     {
                         filterType = actionFilterGuid,
@@ -295,8 +295,9 @@ public static class WfpMethods
         return guid;
     }
 
-    public static unsafe Guid PermitAppId(
+    public static unsafe Guid AddAppId(
         this SafeHandle handle,
+        ActionType action,
         Guid providerKey, 
         Guid subLayerKey, 
         Guid layerKey,
@@ -306,7 +307,7 @@ public static class WfpMethods
         string description)
     {
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            FWP_ACTION_TYPE.FWP_ACTION_PERMIT, new FWPM_FILTER_CONDITION0
+            action.ToFwpActionType(), new FWPM_FILTER_CONDITION0
             {
                 fieldKey = PInvoke.FWPM_CONDITION_ALE_APP_ID,
                 matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
@@ -323,7 +324,7 @@ public static class WfpMethods
 
     public static unsafe Guid AddPeerName(
         this SafeHandle handle,
-        FWP_ACTION_TYPE action,
+        ActionType action,
         Guid providerKey, 
         Guid subLayerKey, 
         Guid layerKey,
@@ -343,7 +344,7 @@ public static class WfpMethods
             };
             
             return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-                action, new FWPM_FILTER_CONDITION0
+                action.ToFwpActionType(), new FWPM_FILTER_CONDITION0
                 {
                     fieldKey = PInvoke.FWPM_CONDITION_PEER_NAME,
                     matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
@@ -454,7 +455,7 @@ public static class WfpMethods
 
     public static Guid AddDnsV4(
         this SafeHandle handle,
-        FWP_ACTION_TYPE action,
+        ActionType action,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -464,7 +465,7 @@ public static class WfpMethods
         string description)
     {
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            action,
+            action.ToFwpActionType(),
             DnsConditions
                 .Concat(addresses.Select(address => new FWPM_FILTER_CONDITION0
                 {
@@ -484,7 +485,7 @@ public static class WfpMethods
 
     public static Guid AddAddressV4(
         this SafeHandle handle,
-        FWP_ACTION_TYPE action,
+        ActionType action,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -494,7 +495,7 @@ public static class WfpMethods
         string description)
     {
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            action,
+            action.ToFwpActionType(),
             addresses.Select(address => new FWPM_FILTER_CONDITION0
                 {
                     fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_ADDRESS,
@@ -572,7 +573,7 @@ public static class WfpMethods
 
     public static unsafe Guid AddSubNetworkV4(
         this SafeHandle handle,
-        FWP_ACTION_TYPE action,
+        ActionType action,
         Guid providerKey,
         Guid subLayerKey,
         Guid layerKey,
@@ -590,7 +591,7 @@ public static class WfpMethods
         };
 
         return AddFilter(handle, providerKey, subLayerKey, layerKey, weight, name, description,
-            action, new FWPM_FILTER_CONDITION0
+            action.ToFwpActionType(), new FWPM_FILTER_CONDITION0
             {
                 fieldKey = isLocalAddress
                     ? PInvoke.FWPM_CONDITION_IP_LOCAL_ADDRESS
@@ -744,7 +745,7 @@ public static class WfpMethods
                 filterCondition = conditionsPtr,
                 action = new FWPM_ACTION0
                 {
-                    type = (uint)actionType,
+                    type = actionType,
                 },
                 displayData = new FWPM_DISPLAY_DATA0
                 {

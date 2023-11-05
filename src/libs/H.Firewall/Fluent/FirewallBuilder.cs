@@ -11,7 +11,7 @@ namespace H.Firewall;
 [SupportedOSPlatform("windows6.0.6000")]
 public class FirewallBuilder
 {
-    private FWP_ACTION_TYPE CurrentAction { get; set; } = FWP_ACTION_TYPE.FWP_ACTION_BLOCK;
+    private ActionType CurrentAction { get; set; } = ActionType.Block;
     private InternetProtocolVersion CurrentVersion { get; set; } = InternetProtocolVersion.All;
 
     private List<Condition> Conditions { get; } = new();
@@ -22,7 +22,7 @@ public class FirewallBuilder
     /// <returns></returns>
     public FirewallBuilder Block()
     {
-        CurrentAction = FWP_ACTION_TYPE.FWP_ACTION_BLOCK;
+        CurrentAction = ActionType.Block;
         return this;
     }
 
@@ -32,7 +32,7 @@ public class FirewallBuilder
     /// <returns></returns>
     public FirewallBuilder Allow()
     {
-        CurrentAction = FWP_ACTION_TYPE.FWP_ACTION_PERMIT;
+        CurrentAction = ActionType.Permit;
         return this;
     }
 
@@ -408,100 +408,101 @@ public class FirewallBuilder
             {
                 switch (condition.Type, condition.Action)
                 {
-                    case (ConditionType.All, FWP_ACTION_TYPE.FWP_ACTION_BLOCK):
+                    case (ConditionType.All, ActionType.Block):
                         handle.BlockAll(providerKey, subLayerKey, weight++);
                         break;
-                    case (ConditionType.Localhost, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.Localhost, ActionType.Permit):
                         handle.PermitLocalhost(providerKey, subLayerKey, weight++);
                         break;
-                    case (ConditionType.LocalAreaNetwork, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.LocalAreaNetwork, ActionType.Permit):
                         handle.PermitLan(providerKey, subLayerKey, weight++);
                         break;
-                    case (ConditionType.DomainNameSystem, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.DomainNameSystem, ActionType.Permit):
                         var weightDeny = weight++;
                         var weightAllow = weight++;
                         handle.PermitDns(providerKey, subLayerKey, weightAllow, weightDeny);
                         break;
-                    case (ConditionType.Application, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
-                        handle.PermitAppId(
+                    case (ConditionType.Application, _):
+                        handle.AddAppId(
+                            condition.Action,
                             providerKey,
                             subLayerKey,
                             condition.Path,
                             weight++);
                         break;
-                    case (ConditionType.IpAddress, FWP_ACTION_TYPE.FWP_ACTION_BLOCK):
+                    case (ConditionType.IpAddress, ActionType.Block):
                         handle.BlockIpAddresses(
                             providerKey,
                             subLayerKey,
                             weight++,
                             condition.Addresses);
                         break;
-                    case (ConditionType.IpAddress, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.IpAddress, ActionType.Permit):
                         handle.PermitIpAddresses(
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             condition.Addresses);
                         break;
-                    case (ConditionType.InternetKeyExchangeVersion2, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.InternetKeyExchangeVersion2, ActionType.Permit):
                         handle.PermitIKEv2(
                             providerKey,
                             subLayerKey,
                             weight: weight++);
                         break;
-                    case (ConditionType.TcpPort, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.TcpPort, ActionType.Permit):
                         handle.PermitTcpPortV4(
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             port: condition.Port);
                         break;
-                    case (ConditionType.UdpPort, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.UdpPort, ActionType.Permit):
                         handle.PermitUdpPortV4(
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             port: condition.Port);
                         break;
-                    case (ConditionType.LocalSubNetwork, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.LocalSubNetwork, ActionType.Permit):
                         handle.PermitLocalSubNetworkV4(
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             network: condition.Network);
                         break;
-                    case (ConditionType.RemoteSubNetwork, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.RemoteSubNetwork, ActionType.Permit):
                         handle.PermitRemoteSubNetworkV4(
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             network: condition.Network);
                         break;
-                    case (ConditionType.RemoteSubNetwork, FWP_ACTION_TYPE.FWP_ACTION_BLOCK):
+                    case (ConditionType.RemoteSubNetwork, ActionType.Block):
                         handle.BlockRemoteSubNetworkV4(
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             network: condition.Network);
                         break;
-                    case (ConditionType.NetworkInterface, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.NetworkInterface, ActionType.Permit):
                         handle.PermitNetworkInterface(
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             ifLuid: condition.InterfaceIndex);
                         break;
-                    case (ConditionType.PeerName, FWP_ACTION_TYPE.FWP_ACTION_PERMIT):
+                    case (ConditionType.PeerName, ActionType.Permit):
                         handle.AddPeerName(
-                            FWP_ACTION_TYPE.FWP_ACTION_PERMIT,
+                            ActionType.Permit,
                             providerKey,
                             subLayerKey,
                             weight: weight++,
                             uri: condition.Uri);
                         break;
-                    case (ConditionType.PeerName, FWP_ACTION_TYPE.FWP_ACTION_BLOCK):
+                    case (ConditionType.PeerName, ActionType.Block):
                         handle.AddPeerName(
-                            FWP_ACTION_TYPE.FWP_ACTION_BLOCK,
+                            ActionType.Block,
                             providerKey,
                             subLayerKey,
                             weight: weight++,

@@ -5,7 +5,7 @@ namespace H.Firewall;
 
 internal sealed class Condition
 {
-    public FWP_ACTION_TYPE Action { get; set; }
+    public ActionType Action { get; set; }
     public ConditionType Type { get; set; }
     public InternetProtocolVersion Version { get; set; } = InternetProtocolVersion.All;
     
