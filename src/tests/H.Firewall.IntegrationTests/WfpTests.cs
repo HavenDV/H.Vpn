@@ -73,12 +73,12 @@ public class WfpTests
     {
         using var firewall = new FirewallBuilder()
             .Block()
-            .Application(@"C:\Users\haven\AppData\Local\Google\Chrome\Application\chrome.exe")
+            .Application(@"C:\Program Files\Google\Chrome\Application\chrome.exe")
             //.Allow()
             //.RemoteSubNetwork(IPNetwork.Parse(""))
             .Build();
 
-        await Task.Delay(TimeSpan.FromSeconds(15));
+        await Task.Delay(TimeSpan.FromSeconds(60));
     }
 
     [TestMethod]
