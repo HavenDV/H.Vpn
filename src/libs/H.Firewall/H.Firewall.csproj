@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="IPNetwork2" Version="2.6.611" />
+    <PackageReference Include="IPNetwork2" Version="2.6.613" />
     <PackageReference Include="PolySharp" Version="1.13.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
