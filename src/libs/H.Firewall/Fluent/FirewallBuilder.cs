@@ -13,6 +13,7 @@ public class FirewallBuilder
 {
     private ActionType CurrentAction { get; set; } = ActionType.Block;
     private InternetProtocolVersion CurrentVersion { get; set; } = InternetProtocolVersion.All;
+    private byte CurrentWeight { get; set; }
 
     private List<Condition> Conditions { get; } = new();
 
@@ -22,6 +23,7 @@ public class FirewallBuilder
     /// <returns></returns>
     public FirewallBuilder Block()
     {
+        CurrentWeight += 1;
         CurrentAction = ActionType.Block;
         return this;
     }
@@ -32,7 +34,18 @@ public class FirewallBuilder
     /// <returns></returns>
     public FirewallBuilder Allow()
     {
+        CurrentWeight += 1;
         CurrentAction = ActionType.Permit;
+        return this;
+    }
+
+    /// <summary>
+    /// Specifies that everything following will have specified weight.
+    /// </summary>
+    /// <returns></returns>
+    public FirewallBuilder Weight(byte weight)
+    {
+        CurrentWeight = weight;
         return this;
     }
 
@@ -76,6 +89,7 @@ public class FirewallBuilder
         {
             Action = CurrentAction,
             Version = CurrentVersion,
+            Weight = CurrentWeight,
             Type = ConditionType.Localhost,
         });
         
@@ -92,6 +106,7 @@ public class FirewallBuilder
         {
             Action = CurrentAction,
             Version = CurrentVersion,
+            Weight = CurrentWeight,
             Type = ConditionType.All,
         });
         
@@ -108,6 +123,7 @@ public class FirewallBuilder
         {
             Action = CurrentAction,
             Version = CurrentVersion,
+            Weight = CurrentWeight,
             Type = ConditionType.LocalAreaNetwork,
         });
         
@@ -124,6 +140,7 @@ public class FirewallBuilder
         {
             Action = CurrentAction,
             Version = CurrentVersion,
+            Weight = CurrentWeight,
             Type = ConditionType.DomainNameSystem,
         });
         
@@ -144,6 +161,7 @@ public class FirewallBuilder
             {
                 Action = CurrentAction,
                 Version = CurrentVersion,
+                Weight = CurrentWeight,
                 Type = ConditionType.Application,
                 Path = path,
             });
@@ -166,6 +184,7 @@ public class FirewallBuilder
             {
                 Action = CurrentAction,
                 Version = CurrentVersion,
+                Weight = CurrentWeight,
                 Type = ConditionType.PeerName,
                 Uri = uri,
             });
@@ -223,6 +242,7 @@ public class FirewallBuilder
         {
             Action = CurrentAction,
             Version = CurrentVersion,
+            Weight = CurrentWeight,
             Type = ConditionType.IpAddress,
             Addresses = addresses,
         });
@@ -251,6 +271,7 @@ public class FirewallBuilder
         {
             Action = CurrentAction,
             Version = CurrentVersion,
+            Weight = CurrentWeight,
             Type = ConditionType.InternetKeyExchangeVersion2,
         });
         
@@ -271,6 +292,7 @@ public class FirewallBuilder
             {
                 Action = CurrentAction,
                 Version = CurrentVersion,
+                Weight = CurrentWeight,
                 Type = ConditionType.TcpPort,
                 Port = port,
             });
@@ -293,6 +315,7 @@ public class FirewallBuilder
             {
                 Action = CurrentAction,
                 Version = CurrentVersion,
+                Weight = CurrentWeight,
                 Type = ConditionType.UdpPort,
                 Port = port,
             });
@@ -315,6 +338,7 @@ public class FirewallBuilder
             {
                 Action = CurrentAction,
                 Version = CurrentVersion,
+                Weight = CurrentWeight,
                 Type = ConditionType.LocalSubNetwork,
                 Network = network,
             });
@@ -348,6 +372,7 @@ public class FirewallBuilder
             {
                 Action = CurrentAction,
                 Version = CurrentVersion,
+                Weight = CurrentWeight,
                 Type = ConditionType.RemoteSubNetwork,
                 Network = network,
             });
@@ -381,6 +406,7 @@ public class FirewallBuilder
             {
                 Action = CurrentAction,
                 Version = CurrentVersion,
+                Weight = CurrentWeight,
                 Type = ConditionType.NetworkInterface,
                 InterfaceIndex = index,
             });
@@ -401,7 +427,6 @@ public class FirewallBuilder
         firewall.Start();
         firewall.RunTransaction(handle =>
         {
-            byte weight = 0;
             var (providerKey, subLayerKey) = handle.RegisterKeys();
 
             foreach (var condition in Conditions)
@@ -409,17 +434,17 @@ public class FirewallBuilder
                 switch (condition.Type, condition.Action)
                 {
                     case (ConditionType.All, ActionType.Block):
-                        handle.BlockAll(providerKey, subLayerKey, weight++);
+                        handle.BlockAll(providerKey, subLayerKey, condition.Weight);
                         break;
                     case (ConditionType.Localhost, ActionType.Permit):
-                        handle.PermitLocalhost(providerKey, subLayerKey, weight++);
+                        handle.PermitLocalhost(providerKey, subLayerKey, condition.Weight);
                         break;
                     case (ConditionType.LocalAreaNetwork, ActionType.Permit):
-                        handle.PermitLan(providerKey, subLayerKey, weight++);
+                        handle.PermitLan(providerKey, subLayerKey, condition.Weight);
                         break;
                     case (ConditionType.DomainNameSystem, ActionType.Permit):
-                        var weightDeny = weight++;
-                        var weightAllow = weight++;
+                        var weightDeny = condition.Weight;
+                        var weightAllow = condition.Weight;
                         handle.PermitDns(providerKey, subLayerKey, weightAllow, weightDeny);
                         break;
                     case (ConditionType.Application, _):
@@ -428,68 +453,68 @@ public class FirewallBuilder
                             providerKey,
                             subLayerKey,
                             condition.Path,
-                            weight++);
+                            condition.Weight);
                         break;
                     case (ConditionType.IpAddress, ActionType.Block):
                         handle.BlockIpAddresses(
                             providerKey,
                             subLayerKey,
-                            weight++,
+                            condition.Weight,
                             condition.Addresses);
                         break;
                     case (ConditionType.IpAddress, ActionType.Permit):
                         handle.PermitIpAddresses(
                             providerKey,
                             subLayerKey,
-                            weight: weight++,
+                            weight: condition.Weight,
                             condition.Addresses);
                         break;
                     case (ConditionType.InternetKeyExchangeVersion2, ActionType.Permit):
                         handle.PermitIKEv2(
                             providerKey,
                             subLayerKey,
-                            weight: weight++);
+                            weight: condition.Weight);
                         break;
                     case (ConditionType.TcpPort, ActionType.Permit):
                         handle.PermitTcpPortV4(
                             providerKey,
                             subLayerKey,
-                            weight: weight++,
+                            weight: condition.Weight,
                             port: condition.Port);
                         break;
                     case (ConditionType.UdpPort, ActionType.Permit):
                         handle.PermitUdpPortV4(
                             providerKey,
                             subLayerKey,
-                            weight: weight++,
+                            weight: condition.Weight,
                             port: condition.Port);
                         break;
                     case (ConditionType.LocalSubNetwork, ActionType.Permit):
                         handle.PermitLocalSubNetworkV4(
                             providerKey,
                             subLayerKey,
-                            weight: weight++,
+                            weight: condition.Weight,
                             network: condition.Network);
                         break;
                     case (ConditionType.RemoteSubNetwork, ActionType.Permit):
                         handle.PermitRemoteSubNetworkV4(
                             providerKey,
                             subLayerKey,
-                            weight: weight++,
+                            weight: condition.Weight,
                             network: condition.Network);
                         break;
                     case (ConditionType.RemoteSubNetwork, ActionType.Block):
                         handle.BlockRemoteSubNetworkV4(
                             providerKey,
                             subLayerKey,
-                            weight: weight++,
+                            weight: condition.Weight,
                             network: condition.Network);
                         break;
                     case (ConditionType.NetworkInterface, ActionType.Permit):
                         handle.PermitNetworkInterface(
                             providerKey,
                             subLayerKey,
-                            weight: weight++,
+                            weight: condition.Weight,
                             ifLuid: condition.InterfaceIndex);
                         break;
                     case (ConditionType.PeerName, ActionType.Permit):
@@ -497,7 +522,7 @@ public class FirewallBuilder
                             ActionType.Permit,
                             providerKey,
                             subLayerKey,
-                            weight: weight++,
+                            weight: condition.Weight,
                             uri: condition.Uri);
                         break;
                     case (ConditionType.PeerName, ActionType.Block):
@@ -505,7 +530,7 @@ public class FirewallBuilder
                             ActionType.Block,
                             providerKey,
                             subLayerKey,
-                            weight: weight++,
+                            weight: condition.Weight,
                             uri: condition.Uri);
                         break;
                     default:
