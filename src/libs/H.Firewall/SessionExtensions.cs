@@ -246,7 +246,7 @@ public static class SessionExtensions
         foreach (var pair in Layers.V4)
         {
             handle.AddSubNetworkV4(
-                action: ActionType.Permit,
+                action: ActionType.Block,
                 providerKey,
                 subLayerKey,
                 pair.Value,
@@ -255,7 +255,7 @@ public static class SessionExtensions
                 mask,
                 isLocalAddress,
                 "H.Wfp",
-                $"Permit traffic on LAN network ({pair.Key})");
+                $"Block traffic on network ({pair.Key})");
         }
     }
 
